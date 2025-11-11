@@ -112,7 +112,7 @@ Use FastAPI's Depends() for clean dependency injection. Rate limiting can be sim
 ---
 
 ### PR-004: Event Service Layer
-**Status:** New
+**Status:** Complete
 **Dependencies:** PR-002
 **Priority:** High
 

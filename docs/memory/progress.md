@@ -1,6 +1,6 @@
 # Progress - Zapier Triggers API
 
-**Last Updated:** 2025-11-11 (PR-002 complete)
+**Last Updated:** 2025-11-11 (PR-004 complete)
 
 This document tracks what actually works, known issues, and implementation status.
 
@@ -8,9 +8,9 @@ This document tracks what actually works, known issues, and implementation statu
 
 ## Implementation Status
 
-**Project Phase:** Foundation (Block 1)
-**Overall Completion:** 11.1% (2 of 18 PRs complete)
-**Ready to Start:** PR-003, PR-004 are now unblocked
+**Project Phase:** Core Services (Block 2)
+**Overall Completion:** 16.7% (3 of 18 PRs complete)
+**Ready to Start:** PR-005, PR-006, PR-007 are now unblocked (PR-003 in progress)
 
 ---
 
@@ -39,13 +39,32 @@ This document tracks what actually works, known issues, and implementation statu
 - Comprehensive unit tests using moto for DynamoDB mocking
 - All repository methods use proper async context manager pattern
 
+**✅ Event Service Layer (PR-004):**
+- Pydantic schemas for all API requests and responses
+- DeduplicationCache with SHA256 fingerprints and 5-minute TTL window
+- EventService with full business logic (ingest, get, list_inbox, mark_delivered)
+- Automatic event ID generation (UUID v4) and timestamping
+- Duplicate detection returns original event ID
+- Pagination support with cursor encoding/decoding
+- 28 unit tests with comprehensive coverage
+
+**Verified Functionality:**
+- Event ingestion with deduplication
+- Event retrieval by ID and timestamp
+- Inbox listing with pagination
+- Event delivery acknowledgment
+- Payload size validation (max 256KB)
+- Event type validation (1-255 chars)
+
 ---
 
 ## What's In Progress
 
-**No PRs currently in progress.**
+**PR-003 (API Key Authentication Middleware)** - White agent
+- FastAPI authentication dependency
+- Rate limiting middleware
 
-PR-002 just completed. PR-003 (API Key Authentication) and PR-004 (Event Service Layer) are now unblocked and ready to start in parallel.
+PR-004 just completed. PR-005, PR-006, PR-007 are now unblocked and ready to start.
 
 ---
 
@@ -107,9 +126,31 @@ PR-003 and PR-004 both depend on PR-001 and PR-002, which are now complete.
 **Notes:** Will implement FastAPI authentication dependency and rate limiting
 
 #### PR-004: Event Service Layer
-**Status:** New
+**Status:** Complete
+**Started:** 2025-11-11
+**Completed:** 2025-11-11
+**Agent:** Blonde
 **Dependencies:** PR-002
-**Notes:** Will implement business logic for event operations
+**Notes:**
+- Created Pydantic schemas for API requests/responses (CreateEventRequest, EventResponse, InboxResponse, InboxEventItem, PaginationMetadata)
+- Implemented DeduplicationCache with in-memory storage and TTL-based expiration (SHA256 fingerprints, 5-minute window)
+- Created EventService class with full business logic:
+  - ingest(): Generates UUID event IDs, checks for duplicates, persists to DynamoDB
+  - get(): Retrieves specific event by ID and timestamp
+  - list_inbox(): Lists undelivered events with pagination support
+  - mark_delivered(): Marks event as delivered
+- Comprehensive unit tests for both deduplication cache (13 tests) and event service (15 tests)
+- All functions < 75 lines, all files < 750 lines
+- Files created:
+  - src/schemas/__init__.py (1 line)
+  - src/schemas/event.py (191 lines) - Request/response schemas with validation
+  - src/utils/__init__.py (1 line)
+  - src/utils/deduplication.py (87 lines) - Deduplication cache
+  - src/services/__init__.py (1 line)
+  - src/services/event_service.py (229 lines) - Event service layer
+  - tests/utils/test_deduplication.py (166 lines) - Deduplication tests
+  - tests/services/test_event_service.py (327 lines) - Service tests
+- Total: 8 files, 1003 lines
 
 ### Block 3: API Routes - Event Ingestion
 
