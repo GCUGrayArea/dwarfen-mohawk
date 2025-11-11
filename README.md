@@ -169,6 +169,76 @@ All configuration is managed via environment variables. See `.env.example` for t
 - `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR)
 - `EVENT_TTL_DAYS`: TTL for delivered events (default: 30)
 
+## API Key Management
+
+The project includes a CLI tool for managing API keys for the Triggers API.
+
+### Creating a New API Key
+
+```bash
+python -m scripts.manage_api_keys generate --description "Production API key" --rate-limit 200
+```
+
+This will:
+- Generate a secure 64-character API key
+- Store the hashed key in DynamoDB
+- Print the plaintext key **once** (save it immediately!)
+
+**Options:**
+- `--description`: Human-readable description for the key
+- `--rate-limit`: Requests per minute limit (default: 100)
+- `--allowed-event-types`: Space-separated list of allowed event types
+
+**Example with event type restrictions:**
+```bash
+python -m scripts.manage_api_keys generate \
+  --description "Orders API" \
+  --rate-limit 500 \
+  --allowed-event-types order.created order.updated order.deleted
+```
+
+### Listing All API Keys
+
+```bash
+python -m scripts.manage_api_keys list
+```
+
+Shows all API keys with their metadata:
+- Key ID
+- Status (active, inactive, revoked)
+- Rate limit
+- Creation timestamp
+- Description
+
+### Revoking an API Key
+
+```bash
+python -m scripts.manage_api_keys revoke <key_id>
+```
+
+Sets the key status to `revoked`, preventing further authentication.
+
+### Updating Rate Limits
+
+```bash
+python -m scripts.manage_api_keys update-rate-limit <key_id> <new_limit>
+```
+
+Updates the rate limit for a specific API key.
+
+**Example:**
+```bash
+python -m scripts.manage_api_keys update-rate-limit 660e9500-f39c-52e5-b827-557766551111 1000
+```
+
+### Running Management Scripts in Docker
+
+To run the management scripts inside the Docker container:
+
+```bash
+docker-compose exec api python -m scripts.manage_api_keys list
+```
+
 ## Coding Standards
 
 This project enforces strict coding standards:
