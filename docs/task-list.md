@@ -80,7 +80,7 @@ This establishes the data layer. Focus on clean abstractions and testability. Us
 ## Block 2: Authentication & Core Services (Depends on: Block 1)
 
 ### PR-003: API Key Authentication Middleware
-**Status:** New
+**Status:** Complete
 **Dependencies:** PR-001, PR-002
 **Priority:** High
 
