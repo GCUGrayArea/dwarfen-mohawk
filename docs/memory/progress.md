@@ -1,6 +1,6 @@
 # Progress - Zapier Triggers API
 
-**Last Updated:** 2025-11-11 (PR-001 complete)
+**Last Updated:** 2025-11-11 (PR-002 complete)
 
 This document tracks what actually works, known issues, and implementation status.
 
@@ -9,8 +9,8 @@ This document tracks what actually works, known issues, and implementation statu
 ## Implementation Status
 
 **Project Phase:** Foundation (Block 1)
-**Overall Completion:** 5.6% (1 of 18 PRs complete)
-**Ready to Start:** PR-002 is now unblocked
+**Overall Completion:** 11.1% (2 of 18 PRs complete)
+**Ready to Start:** PR-003, PR-004 are now unblocked
 
 ---
 
@@ -30,13 +30,22 @@ This document tracks what actually works, known issues, and implementation statu
 - Configuration loads from environment variables
 - All file size limits followed (functions < 75 lines, files < 750 lines)
 
+**✅ DynamoDB Repository Layer (PR-002):**
+- Pydantic models for Event and ApiKey with full validation
+- BaseRepository with async CRUD operations using aioboto3
+- EventRepository with create, get_by_id, list_undelivered, mark_delivered
+- ApiKeyRepository with get_by_id, get_by_key_hash, create
+- Infrastructure script for DynamoDB table creation (Events with DeliveredIndex GSI, API Keys)
+- Comprehensive unit tests using moto for DynamoDB mocking
+- All repository methods use proper async context manager pattern
+
 ---
 
 ## What's In Progress
 
 **No PRs currently in progress.**
 
-PR-001 just completed. PR-002 (DynamoDB tables and repository layer) is now unblocked and ready to start.
+PR-002 just completed. PR-003 (API Key Authentication) and PR-004 (Event Service Layer) are now unblocked and ready to start in parallel.
 
 ---
 
@@ -44,7 +53,7 @@ PR-001 just completed. PR-002 (DynamoDB tables and repository layer) is now unbl
 
 **No PRs blocked.**
 
-PR-002 has no dependencies (depends only on PR-001, which is complete).
+PR-003 and PR-004 both depend on PR-001 and PR-002, which are now complete.
 
 ---
 
@@ -74,10 +83,21 @@ PR-002 has no dependencies (depends only on PR-001, which is complete).
 - All code follows coding standards (functions < 75 lines, files < 750 lines, type hints everywhere)
 
 #### PR-002: DynamoDB Table Definitions and Repository Layer
-**Status:** New
-**Started:** Not yet
-**Completed:** Not yet
-**Notes:** Will create table schemas, repository pattern, async DynamoDB operations
+**Status:** Complete
+**Started:** 2025-11-11
+**Completed:** 2025-11-11
+**Agent:** White
+**Notes:**
+- Created Pydantic models (Event: 60 lines, ApiKey: 56 lines)
+- Implemented BaseRepository with async CRUD operations (120 lines)
+- EventRepository: create, get_by_id, list_undelivered (using DeliveredIndex GSI), mark_delivered (with TTL) (136 lines)
+- ApiKeyRepository: get_by_id, get_by_key_hash (using scan), create (86 lines)
+- Infrastructure script to create DynamoDB tables in LocalStack/AWS (135 lines)
+- Unit tests for both repositories using moto for DynamoDB mocking (test_event_repository.py: 150 lines, test_api_key_repository.py: 130 lines)
+- Fixed context manager pattern: initially created _get_table() helper that returned table from within context, refactored to use context managers directly in each method
+- All repository methods are async with proper type hints
+- All files under 750 lines (largest: 150 lines)
+- 13 files created, 888 lines total
 
 ### Block 2: Authentication & Core Services
 
