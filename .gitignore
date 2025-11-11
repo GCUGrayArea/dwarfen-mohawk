@@ -1,7 +1,87 @@
-# Picatrix Meta-Repo Template
-# This is a minimal .gitignore for the template itself.
-# When the planning agent generates a PRD for a real project, it will
-# replace this with a comprehensive language-specific .gitignore.
+# Zapier Triggers API - Python/FastAPI Project
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Package managers
+poetry.lock
+Pipfile.lock
+# Uncomment if using pip-tools:
+# requirements.txt (keep requirements.txt if manually maintained)
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# Linting
+.ruff_cache/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+# Keep templates:
+# !.env.example
+# !env.example
+
+# Database files (LocalStack/local dev)
+*.db
+*.sqlite
+*.sqlite3
+
+# AWS SAM
+.aws-sam/
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
 
 # OS files
 .DS_Store
@@ -26,3 +106,9 @@ $RECYCLE.BIN/
 # Claude Code local settings
 .claude/settings.local.json
 .claude/halt.lock
+
+# Agent coordination (DO NOT IGNORE - these are committed)
+# docs/prd.md
+# docs/task-list.md
+# docs/memory/
+# .claude/agent-identity.lock
