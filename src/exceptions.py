@@ -101,3 +101,31 @@ class RateLimitError(TriggerAPIException):
             details=error_details,
         )
         self.retry_after = retry_after
+
+
+class EventNotFoundError(TriggerAPIException):
+    """Raised when an event is not found (404)."""
+
+    def __init__(
+        self,
+        message: str = "Event not found",
+        event_id: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """
+        Initialize EventNotFoundError.
+
+        Args:
+            message: Error message
+            event_id: Event ID that was not found
+            details: Additional error details
+        """
+        error_details = details or {}
+        if event_id:
+            error_details["event_id"] = event_id
+        super().__init__(
+            message=message,
+            status_code=404,
+            error_code="NOT_FOUND",
+            details=error_details,
+        )
