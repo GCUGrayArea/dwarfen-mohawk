@@ -57,6 +57,18 @@ This document tracks what actually works, known issues, and implementation statu
 - Pagination support with cursor encoding/decoding
 - 28 unit tests with comprehensive coverage
 
+**✅ POST /events Endpoint (PR-005):**
+- POST /events endpoint for event ingestion with full validation
+- Centralized exception handler for consistent error responses
+- Request validation for required fields (title, start_time, end_time, description)
+- Business logic validation (end_time must be after start_time, valid ISO8601 datetime)
+- Proper HTTP status codes (201 Created, 400 Bad Request, 401 Unauthorized, 500 Internal Server Error)
+- API key authentication required on all requests
+- Comprehensive error messages with field-specific details
+- Integration with EventService for event creation
+- Full test coverage with 14 tests covering success and error scenarios
+- All code follows standards (functions < 75 lines, files < 750 lines)
+
 **✅ GET /inbox Endpoint (PR-006):**
 - GET /inbox endpoint for retrieving undelivered events
 - Cursor-based pagination with configurable page size (default 50, max 200)
@@ -80,6 +92,9 @@ This document tracks what actually works, known issues, and implementation statu
 - Full test coverage with 13 comprehensive tests
 
 **Verified Functionality:**
+- Event creation via POST /events with authentication
+- Request validation (required fields, datetime parsing, business rules)
+- Error handling with appropriate status codes (201, 400, 401, 500)
 - Event ingestion with deduplication
 - Event retrieval by ID and timestamp
 - Inbox listing with cursor pagination
@@ -185,9 +200,30 @@ Block 2 (PR-003, PR-004) is complete. Block 3-4 routes are in progress.
 ### Block 3: API Routes - Event Ingestion
 
 #### PR-005: POST /events Endpoint
-**Status:** New
+**Status:** Complete
+**Started:** 2025-11-11
+**Completed:** 2025-11-11
+**Agent:** Brown
 **Dependencies:** PR-003, PR-004
-**Notes:** Main ingestion endpoint with validation and error handling
+**Notes:**
+- Implemented POST /events endpoint for authenticated event ingestion
+- Created centralized exception handler for consistent error responses across all endpoints
+- Request validation using Pydantic schemas with detailed error messages
+- Business logic validation (datetime parsing, end_time after start_time)
+- Proper HTTP status codes: 201 Created, 400 Bad Request, 401 Unauthorized, 500 Internal Server Error
+- Integration with EventService.ingest() for event creation
+- Comprehensive test suite with 14 tests covering all scenarios
+- Files created:
+  - src/routes/__init__.py (5 lines) - Router exports
+  - src/routes/events.py (68 lines) - POST /events endpoint
+  - src/handlers/__init__.py (5 lines) - Exception handler exports
+  - src/handlers/exception_handler.py (58 lines) - Centralized error handling
+  - tests/routes/__init__.py (1 line) - Test package marker
+  - tests/routes/test_events_post.py (366 lines) - Comprehensive endpoint tests
+- Modified files:
+  - src/main.py - Integrated events router and exception handler
+- Total: 7 files modified/created, 503 new lines
+- All code follows standards (largest function: 38 lines, largest file: 366 lines)
 
 ### Block 4: API Routes - Event Retrieval
 
