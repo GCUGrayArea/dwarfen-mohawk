@@ -1,6 +1,6 @@
 # Progress - Zapier Triggers API
 
-**Last Updated:** 2025-11-11 (PR-006 complete)
+**Last Updated:** 2025-11-11 (PR-012 complete)
 
 This document tracks what actually works, known issues, and implementation status.
 
@@ -8,9 +8,9 @@ This document tracks what actually works, known issues, and implementation statu
 
 ## Implementation Status
 
-**Project Phase:** API Routes (Block 3-4)
-**Overall Completion:** 27.8% (5 of 18 PRs complete)
-**Ready to Start:** PR-005, PR-008 are now unblocked
+**Project Phase:** API Routes & Testing (Block 3-4, 6)
+**Overall Completion:** 33.3% (6 of 18 PRs complete)
+**Ready to Start:** PR-005, PR-008, PR-010, PR-011 are now unblocked
 
 ---
 
@@ -66,6 +66,18 @@ This document tracks what actually works, known issues, and implementation statu
 - Validates cursor format and handles invalid cursors gracefully
 - Requires API key authentication
 - Comprehensive integration tests covering edge cases
+
+**✅ API Key Management Utilities (PR-012):**
+- CLI tool for API key management with four operations
+- create: Generate new API keys with role assignment (viewer/creator)
+- list: Display all API keys in formatted table
+- revoke-by-id: Revoke specific key by key_id
+- revoke-by-email: Revoke all keys for a user
+- User validation before key creation
+- Secure key generation using secrets module
+- Bcrypt hashing for key storage
+- Works with LocalStack and AWS DynamoDB
+- Full test coverage with 13 comprehensive tests
 
 **Verified Functionality:**
 - Event ingestion with deduplication
@@ -233,9 +245,39 @@ Block 2 (PR-003, PR-004) is complete. Block 3-4 routes are in progress.
 **Notes:** Comprehensive edge case coverage
 
 #### PR-012: API Key Management Utilities
-**Status:** New
+**Status:** Complete
+**Started:** 2025-11-11
+**Completed:** 2025-11-11
+**Agent:** Tangerine
 **Dependencies:** PR-002, PR-003
-**Notes:** CLI tools for key management
+**Notes:**
+- Created comprehensive CLI tool for API key management using argparse
+- Implemented four key operations:
+  - create: Generate new API keys with role assignment (viewer/creator), validates user existence
+  - list: Display all API keys in formatted table with key_id, user_email, role, status, created_at
+  - revoke-by-id: Revoke key by key_id (sets status=revoked)
+  - revoke-by-email: Revoke all keys for a user email
+- Key features:
+  - Validates user_id exists before creating keys
+  - Generates secure 32-character API keys with secrets module
+  - Uses bcrypt for key hashing (consistent with PR-003)
+  - Works with LocalStack and AWS DynamoDB via AWS_ENDPOINT_URL environment variable
+  - Formatted table output with proper column alignment for list command
+- Comprehensive test suite with 13 tests using moto for DynamoDB mocking:
+  - Tests all four CLI operations (create, list, revoke-by-id, revoke-by-email)
+  - Tests error cases (user not found, key not found, duplicate detection)
+  - Mocks stdout/stderr for CLI output verification
+  - Achieves high test coverage
+- Updated README with new "Scripts" section documenting usage
+- All files follow standards (scripts/manage_api_keys.py: 236 lines, tests: 403 lines)
+- Files created:
+  - scripts/__init__.py (1 line)
+  - scripts/manage_api_keys.py (236 lines) - CLI implementation
+  - tests/scripts/__init__.py (1 line)
+  - tests/scripts/test_manage_api_keys.py (403 lines) - Test suite
+  - README.md (modified) - Added Scripts section with usage examples
+- Total: 4 files created + 1 modified, 641 lines added
+- Note: Files were accidentally committed as part of PR-006, but functionality is complete and correct
 
 ### Block 7: Production Readiness
 
@@ -446,14 +488,3 @@ Risks discovered during implementation will be tracked here with mitigation stra
 - [ ] Deployment configuration ready (even if not deployed)
 - [ ] No TODOs or FIXMEs in code
 - [ ] All acceptance criteria from PRD met
-
-- Created custom exception classes: UnauthorizedError, ForbiddenError, RateLimitError (103 lines)
-- Implemented bcrypt-based API key hashing and verification utilities (35 lines)
-- FastAPI dependency for require_api_key with Bearer token extraction (130 lines)
-- Verification scans all API keys and checks bcrypt hashes (MVP approach - noted for production improvement)
-- Rate limiting middleware using in-memory counter with 60-second windows (82 lines)
-- Comprehensive unit tests for both auth and rate limiting (51 + 144 lines)
-- All files under 75-line function limit and 750-line file limit
-- 10 files created (implementation + tests)
-- Authentication flow: Extract Bearer token → Scan keys → Verify hash → Check status (active/inactive/revoked)
-- Rate limiter tracks requests per key_id with automatic window reset
