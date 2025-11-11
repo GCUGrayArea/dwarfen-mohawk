@@ -8,7 +8,7 @@ Total PRs: 18 organized into 6 dependency blocks
 ## Block 1: Foundation & Infrastructure (No dependencies)
 
 ### PR-001: Project Setup and Configuration
-**Status:** New
+**Status:** Planning
 **Dependencies:** None
 **Priority:** High
 
