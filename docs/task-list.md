@@ -356,7 +356,8 @@ Aim for thorough edge case coverage. Use moto for mocking AWS services. Fast, fo
 ---
 
 ### PR-012: API Key Management Utilities (Admin Tools)
-**Status:** New
+**Status:** Complete
+**Completed by:** Tangerine Agent
 **Dependencies:** PR-002, PR-003
 **Priority:** Medium
 
