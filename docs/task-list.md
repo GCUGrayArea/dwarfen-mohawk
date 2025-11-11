@@ -209,6 +209,7 @@ Cursors can be base64-encoded JSON with last event's timestamp+id. Keep it simpl
 
 ### PR-007: GET /events/{event_id} and DELETE /events/{event_id} Endpoints
 **Status:** Complete
+**Completed by:** Red Agent
 **Dependencies:** PR-003, PR-004
 **Priority:** Medium
 
