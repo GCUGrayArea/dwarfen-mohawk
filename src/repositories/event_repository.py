@@ -22,6 +22,21 @@ class EventRepository(BaseRepository):
         """Initialize EventRepository with events table."""
         super().__init__(settings.dynamodb_table_events)
 
+    def _deserialize_event(self, item: Dict) -> Event:
+        """
+        Convert DynamoDB item to Event model.
+
+        Args:
+            item: DynamoDB item dict
+
+        Returns:
+            Event model with converted types
+        """
+        # Convert int delivered (0/1) back to boolean
+        if "delivered" in item:
+            item["delivered"] = bool(item["delivered"])
+        return Event(**item)
+
     async def create(self, event: Event) -> Event:
         """
         Create a new event in DynamoDB.
@@ -32,7 +47,11 @@ class EventRepository(BaseRepository):
         Returns:
             The created Event
         """
-        item = event.model_dump()
+        # Exclude None values as DynamoDB doesn't handle them
+        item = event.model_dump(exclude_none=True)
+        # Convert boolean delivered to int (0/1) for DynamoDB GSI
+        if "delivered" in item:
+            item["delivered"] = 1 if item["delivered"] else 0
         await self.put_item(item)
         return event
 
@@ -53,7 +72,7 @@ class EventRepository(BaseRepository):
         item = await self.get_item(key)
 
         if item:
-            return Event(**item)
+            return self._deserialize_event(item)
         return None
 
     async def list_undelivered(
@@ -81,7 +100,7 @@ class EventRepository(BaseRepository):
             query_params = {
                 "IndexName": "DeliveredIndex",
                 "KeyConditionExpression": "delivered = :delivered",
-                "ExpressionAttributeValues": {":delivered": False},
+                "ExpressionAttributeValues": {":delivered": 0},  # 0 for False
                 "Limit": limit,
                 "ScanIndexForward": True,  # Chronological order
             }
@@ -91,7 +110,10 @@ class EventRepository(BaseRepository):
 
             response = await table.query(**query_params)
 
-            events = [Event(**item) for item in response.get("Items", [])]
+            events = [
+                self._deserialize_event(item)
+                for item in response.get("Items", [])
+            ]
             next_key = response.get("LastEvaluatedKey")
 
             return events, next_key
@@ -122,7 +144,7 @@ class EventRepository(BaseRepository):
             "ttl = :ttl"
         )
         expr_values = {
-            ":delivered": True,
+            ":delivered": 1,  # 1 for True
             ":updated_at": datetime.utcnow().isoformat() + "Z",
             ":ttl": ttl_timestamp,
         }
@@ -131,6 +153,6 @@ class EventRepository(BaseRepository):
             result = await self.update_item(
                 key, update_expr, expr_values
             )
-            return Event(**result)
+            return self._deserialize_event(result)
         except Exception:
             return None

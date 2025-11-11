@@ -9,12 +9,7 @@ services:
       - "4566:4566"  # LocalStack edge port
     environment:
       - SERVICES=dynamodb
-      - DEBUG=0
-      - DATA_DIR=/tmp/localstack/data
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    volumes:
-      - localstack-data:/tmp/localstack
-      - /var/run/docker.sock:/var/run/docker.sock
+      - DEBUG=1
     networks:
       - zapier-network
     healthcheck:
@@ -46,6 +41,8 @@ services:
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests
+      - ./infrastructure:/app/infrastructure
+      - ./scripts:/app/scripts
     depends_on:
       localstack:
         condition: service_healthy
