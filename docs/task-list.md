@@ -144,7 +144,7 @@ Business logic lives here, not in routes. Keep services pure and testable by inj
 ## Block 3: API Routes - Event Ingestion (Depends on: Block 2)
 
 ### PR-005: POST /events Endpoint
-**Status:** New
+**Status:** Complete
 **Dependencies:** PR-003, PR-004
 **Priority:** High
 
