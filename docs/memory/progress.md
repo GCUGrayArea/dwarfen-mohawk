@@ -123,7 +123,13 @@ Block 2 (PR-003, PR-004) is complete. Block 3-4 routes are in progress.
 
 ## Known Issues
 
-**No known issues yet.**
+**See `docs/known-issues.md` for detailed issue tracking.**
+
+**Critical (Blocking):**
+1. DELETE /events/{event_id} returns 404 for existing events - blocks PR-007 completion
+
+**Medium (Non-blocking):**
+2. Duplicate detection not working - in-memory cache issue (acceptable for MVP)
 
 ---
 
