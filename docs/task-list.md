@@ -178,7 +178,7 @@ This is the main ingestion endpoint. Focus on robust error handling and clear er
 ## Block 4: API Routes - Event Retrieval (Depends on: Block 2)
 
 ### PR-006: GET /inbox Endpoint with Pagination
-**Status:** New
+**Status:** Complete
 **Dependencies:** PR-003, PR-004
 **Priority:** High
 
