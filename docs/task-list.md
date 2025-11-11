@@ -44,7 +44,7 @@ This PR establishes the development foundation. All subsequent PRs will build on
 ---
 
 ### PR-002: DynamoDB Table Definitions and Repository Layer
-**Status:** New
+**Status:** Planning
 **Dependencies:** PR-001
 **Priority:** High
 
