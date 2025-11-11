@@ -1,6 +1,6 @@
 # Progress - Zapier Triggers API
 
-**Last Updated:** 2025-11-11 (PR-003 complete)
+**Last Updated:** 2025-11-11 (PR-006 complete)
 
 This document tracks what actually works, known issues, and implementation status.
 
@@ -8,9 +8,9 @@ This document tracks what actually works, known issues, and implementation statu
 
 ## Implementation Status
 
-**Project Phase:** Core Services (Block 2)
-**Overall Completion:** 16.7% (3 of 18 PRs complete)
-**Ready to Start:** PR-005, PR-006, PR-007 are now unblocked
+**Project Phase:** API Routes (Block 3-4)
+**Overall Completion:** 27.8% (5 of 18 PRs complete)
+**Ready to Start:** PR-005, PR-008 are now unblocked
 
 ---
 
@@ -39,7 +39,15 @@ This document tracks what actually works, known issues, and implementation statu
 - Comprehensive unit tests using moto for DynamoDB mocking
 - All repository methods use proper async context manager pattern
 
-**✅ API Key Authentication Middleware (PR-003):**- Custom exception classes (UnauthorizedError, ForbiddenError, RateLimitError)- Bcrypt-based API key hashing and verification- FastAPI dependency for require_api_key with Bearer token extraction- Rate limiting middleware with in-memory counter (60-second windows)- Authentication scans all keys and verifies bcrypt hashes- Comprehensive unit tests for authentication and rate limiting- Status checking (active/inactive/revoked keys)
+**✅ API Key Authentication Middleware (PR-003):**
+- Custom exception classes (UnauthorizedError, ForbiddenError, RateLimitError)
+- Bcrypt-based API key hashing and verification
+- FastAPI dependency for require_api_key with Bearer token extraction
+- Rate limiting middleware with in-memory counter (60-second windows)
+- Authentication scans all keys and verifies bcrypt hashes
+- Comprehensive unit tests for authentication and rate limiting
+- Status checking (active/inactive/revoked keys)
+
 **✅ Event Service Layer (PR-004):**
 - Pydantic schemas for all API requests and responses
 - DeduplicationCache with SHA256 fingerprints and 5-minute TTL window
@@ -49,23 +57,32 @@ This document tracks what actually works, known issues, and implementation statu
 - Pagination support with cursor encoding/decoding
 - 28 unit tests with comprehensive coverage
 
+**✅ GET /inbox Endpoint (PR-006):**
+- GET /inbox endpoint for retrieving undelivered events
+- Cursor-based pagination with configurable page size (default 50, max 200)
+- Base64-encoded cursor with timestamp and event_id
+- Returns events in chronological order (oldest first)
+- Pagination metadata in response (next_cursor, has_more)
+- Validates cursor format and handles invalid cursors gracefully
+- Requires API key authentication
+- Comprehensive integration tests covering edge cases
+
 **Verified Functionality:**
 - Event ingestion with deduplication
 - Event retrieval by ID and timestamp
-- Inbox listing with pagination
+- Inbox listing with cursor pagination
 - Event delivery acknowledgment
 - Payload size validation (max 256KB)
 - Event type validation (1-255 chars)
+- Pagination edge cases (empty inbox, single page, multiple pages, invalid cursors)
 
 ---
 
 ## What's In Progress
 
-**PR-003 (API Key Authentication Middleware)** - White agent
-- FastAPI authentication dependency
-- Rate limiting middleware
+**None currently in progress.**
 
-PR-004 just completed. PR-005, PR-006, PR-007 are now unblocked and ready to start.
+PR-006 and PR-007 just completed. PR-005 and PR-008 are now unblocked and ready to start.
 
 ---
 
@@ -73,7 +90,7 @@ PR-004 just completed. PR-005, PR-006, PR-007 are now unblocked and ready to sta
 
 **No PRs blocked.**
 
-PR-003 and PR-004 both depend on PR-001 and PR-002, which are now complete.
+Block 2 (PR-003, PR-004) is complete. Block 3-4 routes are in progress.
 
 ---
 
@@ -163,12 +180,31 @@ PR-003 and PR-004 both depend on PR-001 and PR-002, which are now complete.
 ### Block 4: API Routes - Event Retrieval
 
 #### PR-006: GET /inbox Endpoint with Pagination
-**Status:** New
+**Status:** Complete
+**Started:** 2025-11-11
+**Completed:** 2025-11-11
+**Agent:** Blonde
 **Dependencies:** PR-003, PR-004
-**Notes:** List undelivered events with cursor pagination
+**Notes:**
+- Implemented GET /inbox endpoint in src/routes/events.py
+- Cursor-based pagination with base64-encoded JSON (timestamp + event_id)
+- Query parameters: limit (default 50, max 200), cursor (optional)
+- Returns events in chronological order (oldest first)
+- Response includes pagination metadata (next_cursor, has_more)
+- Invalid cursor handling with 400 error and clear message
+- Comprehensive integration tests with pytest and httpx.AsyncClient
+- Test coverage: empty inbox, single page, multiple pages, invalid cursors, max limit validation
+- Files modified:
+  - src/routes/events.py (added GET /inbox handler, registered router in main.py)
+  - tests/routes/test_events_inbox.py (141 lines) - Integration tests
+- All functions < 75 lines, proper type hints
+- Fully integrated with EventService pagination support from PR-004
 
 #### PR-007: GET /events/{event_id} and DELETE /events/{event_id} Endpoints
-**Status:** New
+**Status:** Complete
+**Started:** 2025-11-11
+**Completed:** 2025-11-11
+**Agent:** White
 **Dependencies:** PR-003, PR-004
 **Notes:** Individual event operations
 
