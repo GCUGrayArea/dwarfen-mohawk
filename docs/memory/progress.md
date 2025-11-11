@@ -252,9 +252,21 @@ Block 2 (PR-003, PR-004) is complete. Block 3-4 routes are in progress.
 **Status:** Complete
 **Started:** 2025-11-11
 **Completed:** 2025-11-11
-**Agent:** White
+**Agent:** Red
 **Dependencies:** PR-003, PR-004
-**Notes:** Individual event operations
+**Notes:**
+- Added EventNotFoundError exception to src/exceptions.py with 404 status code
+- Implemented GET /events/{event_id} endpoint for retrieving specific events
+- Implemented DELETE /events/{event_id} endpoint for marking events as delivered
+- Both endpoints properly handle 404 for non-existent events
+- DELETE is idempotent (returns 204 for already-delivered events)
+- Comprehensive test coverage with 2 new test files
+- Files modified/created:
+  - src/exceptions.py (modified) - Added EventNotFoundError
+  - src/routes/events.py (modified) - Added GET and DELETE handlers
+  - tests/routes/test_events_get.py (201 lines) - Tests for GET endpoint
+  - tests/routes/test_events_delete.py (199 lines) - Tests for DELETE endpoint
+- All functions < 75 lines, proper type hints, follows coding standards
 
 ### Block 5: Developer Experience
 
