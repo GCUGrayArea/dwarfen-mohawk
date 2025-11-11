@@ -1,6 +1,6 @@
 # Progress - Zapier Triggers API
 
-**Last Updated:** 2025-11-11 (PR-004 complete)
+**Last Updated:** 2025-11-11 (PR-003 complete)
 
 This document tracks what actually works, known issues, and implementation status.
 
@@ -10,7 +10,7 @@ This document tracks what actually works, known issues, and implementation statu
 
 **Project Phase:** Core Services (Block 2)
 **Overall Completion:** 16.7% (3 of 18 PRs complete)
-**Ready to Start:** PR-005, PR-006, PR-007 are now unblocked (PR-003 in progress)
+**Ready to Start:** PR-005, PR-006, PR-007 are now unblocked
 
 ---
 
@@ -39,6 +39,7 @@ This document tracks what actually works, known issues, and implementation statu
 - Comprehensive unit tests using moto for DynamoDB mocking
 - All repository methods use proper async context manager pattern
 
+**✅ API Key Authentication Middleware (PR-003):**- Custom exception classes (UnauthorizedError, ForbiddenError, RateLimitError)- Bcrypt-based API key hashing and verification- FastAPI dependency for require_api_key with Bearer token extraction- Rate limiting middleware with in-memory counter (60-second windows)- Authentication scans all keys and verifies bcrypt hashes- Comprehensive unit tests for authentication and rate limiting- Status checking (active/inactive/revoked keys)
 **✅ Event Service Layer (PR-004):**
 - Pydantic schemas for all API requests and responses
 - DeduplicationCache with SHA256 fingerprints and 5-minute TTL window
@@ -409,3 +410,14 @@ Risks discovered during implementation will be tracked here with mitigation stra
 - [ ] Deployment configuration ready (even if not deployed)
 - [ ] No TODOs or FIXMEs in code
 - [ ] All acceptance criteria from PRD met
+
+- Created custom exception classes: UnauthorizedError, ForbiddenError, RateLimitError (103 lines)
+- Implemented bcrypt-based API key hashing and verification utilities (35 lines)
+- FastAPI dependency for require_api_key with Bearer token extraction (130 lines)
+- Verification scans all API keys and checks bcrypt hashes (MVP approach - noted for production improvement)
+- Rate limiting middleware using in-memory counter with 60-second windows (82 lines)
+- Comprehensive unit tests for both auth and rate limiting (51 + 144 lines)
+- All files under 75-line function limit and 750-line file limit
+- 10 files created (implementation + tests)
+- Authentication flow: Extract Bearer token → Scan keys → Verify hash → Check status (active/inactive/revoked)
+- Rate limiter tracks requests per key_id with automatic window reset
