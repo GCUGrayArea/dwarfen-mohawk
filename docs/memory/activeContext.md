@@ -8,14 +8,27 @@ This document tracks current work focus, recent changes, and immediate context.
 
 ## Current Phase
 
-**Phase:** Post-Emergency Fix - Debugging Remaining Issues
-**Status:** 6 PRs complete, 2 critical issues identified
-**Current Focus:** DELETE endpoint 404 issue (blocks PR-007 completion)
-**Next Steps:** Debug DELETE issue, then continue with PR-008, PR-009, PR-010
+**Phase:** Bug Fixes Complete - Ready for Next PRs
+**Status:** 6 PRs complete, DELETE issue RESOLVED
+**Current Focus:** All critical bugs fixed, ready to continue implementation
+**Next Steps:** PR-008 (OpenAPI docs), PR-009 (health check), PR-010 (integration tests)
 
 ---
 
 ## Recent Changes
+
+### 2025-11-11: DELETE Endpoint Bug Fix (Orange Agent)
+- **Critical Fix:** Resolved DELETE /events/{id} 404 issue
+  - Root cause: `ttl` is a reserved keyword in DynamoDB
+  - Update expressions without ExpressionAttributeNames failed silently
+  - Added expression_names parameter to BaseRepository.update_item()
+  - Updated EventRepository.mark_delivered() to use #ttl placeholder
+- **Testing:** DELETE now returns 204, events properly marked as delivered
+- **Files Modified:**
+  - src/repositories/base.py (added expression_names support)
+  - src/repositories/event_repository.py (fixed ttl reference)
+- **Duplicate Detection:** Investigated and documented root cause (new cache per request)
+  - Acceptable for MVP, documented fix options in progress.md
 
 ### 2025-11-11: Emergency DynamoDB Integration Fix (Commit 6e43100)
 - **Critical Fix:** Resolved DynamoDB type mismatch for `delivered` field

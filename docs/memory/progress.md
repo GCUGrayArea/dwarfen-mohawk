@@ -123,13 +123,15 @@ Block 2 (PR-003, PR-004) is complete. Block 3-4 routes are in progress.
 
 ## Known Issues
 
-**See `docs/known-issues.md` for detailed issue tracking.**
-
 **Critical (Blocking):**
-1. DELETE /events/{event_id} returns 404 for existing events - blocks PR-007 completion
+None - DELETE issue resolved!
 
 **Medium (Non-blocking):**
-2. Duplicate detection not working - in-memory cache issue (acceptable for MVP)
+1. Duplicate detection not working - EventService creates new DeduplicationCache on each request
+   - Root cause: `EventService()` instantiated per-request in route handlers
+   - Each instance gets fresh empty cache, preventing duplicate detection
+   - Fix: Use module-level singleton cache or FastAPI dependency injection
+   - Status: Acceptable for MVP, can be fixed in PR-013 or PR-014
 
 ---
 
@@ -484,13 +486,47 @@ Expected packages:
 
 ## Lessons Learned
 
-**None yet** - will be updated as implementation progresses
+### 2025-11-11: DynamoDB Reserved Keywords Bug
 
-This section will capture:
-- Unexpected challenges encountered
-- Deviations from original plan
-- Better approaches discovered
-- Gotchas for future agents
+**Issue:** DELETE /events/{event_id} endpoint was returning 404 for existing events.
+
+**Root Cause:** The `ttl` attribute is a reserved keyword in DynamoDB. The `mark_delivered` method in `EventRepository` was using `ttl` directly in the UpdateExpression without using ExpressionAttributeNames. This caused DynamoDB's update_item to fail with a ValidationException, which was caught by the generic try-except block and returned None, leading to a 404 response.
+
+**Investigation Process:**
+1. Verified event existed via GET endpoint (200 OK)
+2. Confirmed DELETE returned 404 with same event_id and timestamp
+3. Scanned DynamoDB table directly - event was present
+4. Tested update_item manually - got ValidationException about reserved keyword
+5. Identified that "ttl" is a DynamoDB reserved keyword
+
+**Fix Applied:**
+- Updated `BaseRepository.update_item()` to accept optional `expression_names` parameter
+- Modified `EventRepository.mark_delivered()` to use `#ttl` placeholder in UpdateExpression
+- Added `ExpressionAttributeNames` mapping `{"#ttl": "ttl"}`
+
+**Files Modified:**
+- `src/repositories/base.py` - Added expression_names parameter support
+- `src/repositories/event_repository.py` - Used #ttl placeholder for reserved keyword
+
+**Testing:**
+- DELETE now returns 204 No Content
+- Event properly marked as delivered=true
+- Event removed from inbox (GET /events/inbox)
+
+**Key Takeaway:** Always use ExpressionAttributeNames for DynamoDB attributes that might be reserved keywords (ttl, timestamp, status, name, data, etc.). Don't rely on generic exception handling to mask validation errors.
+
+### Duplicate Detection Cache Issue
+
+**Issue:** Duplicate events receive different event_ids instead of returning the original event_id.
+
+**Root Cause:** Each route handler creates a new `EventService()` instance, which creates a new `DeduplicationCache()` with an empty cache. The cache state doesn't persist across requests.
+
+**Status:** Documented as non-blocking for MVP. Can be fixed by using a module-level singleton cache or FastAPI dependency injection to share cache instances across requests.
+
+**Potential Fixes:**
+1. Module-level singleton: `_global_dedup_cache = DeduplicationCache()`
+2. FastAPI dependency injection with lifespan
+3. Redis-based distributed cache (production-ready)
 
 ---
 
