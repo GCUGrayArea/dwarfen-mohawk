@@ -296,16 +296,19 @@ async def get_inbox(
 )
 async def get_event(
     event_id: str,
-    timestamp: str,
     api_key: ApiKey = Depends(require_api_key),
+    timestamp: str | None = Query(
+        default=None,
+        description="Optional ISO 8601 timestamp for composite key lookup",
+    ),
 ) -> EventResponse:
     """
-    Retrieve a specific event by ID and timestamp.
+    Retrieve a specific event by ID.
 
     Args:
         event_id: Event UUID
-        timestamp: Event ISO 8601 timestamp
         api_key: Authenticated API key (injected by dependency)
+        timestamp: Optional ISO 8601 timestamp (for composite key support)
 
     Returns:
         EventResponse with full event details
@@ -317,7 +320,7 @@ async def get_event(
     from src.exceptions import EventNotFoundError
 
     service = EventService()
-    response = await service.get(event_id, timestamp)
+    response = await service.get(event_id, timestamp) if timestamp else await service.get_by_id(event_id)
 
     if response is None:
         raise EventNotFoundError(
@@ -345,8 +348,11 @@ async def get_event(
 )
 async def delete_event(
     event_id: str,
-    timestamp: str,
     api_key: ApiKey = Depends(require_api_key),
+    timestamp: str | None = Query(
+        default=None,
+        description="Optional ISO 8601 timestamp for composite key lookup",
+    ),
 ) -> None:
     """
     Mark an event as delivered (soft delete).
@@ -356,8 +362,8 @@ async def delete_event(
 
     Args:
         event_id: Event UUID
-        timestamp: Event ISO 8601 timestamp
         api_key: Authenticated API key (injected by dependency)
+        timestamp: Optional ISO 8601 timestamp (for composite key support)
 
     Returns:
         None (204 No Content)
@@ -369,7 +375,7 @@ async def delete_event(
     from src.exceptions import EventNotFoundError
 
     service = EventService()
-    result = await service.mark_delivered(event_id, timestamp)
+    result = await service.mark_delivered(event_id, timestamp) if timestamp else await service.mark_delivered_by_id(event_id)
 
     if not result:
         raise EventNotFoundError(

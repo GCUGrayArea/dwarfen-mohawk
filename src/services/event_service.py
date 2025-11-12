@@ -207,3 +207,47 @@ class EventService:
         """
         result = await self.repository.mark_delivered(event_id, timestamp)
         return result is not None
+
+    async def get_by_id(self, event_id: str) -> EventResponse | None:
+        """
+        Get a specific event by ID only (queries all events with this ID).
+
+        Args:
+            event_id: Event UUID
+
+        Returns:
+            EventResponse with event details, None if not found
+        """
+        # Query inbox to find the event
+        inbox = await self.list_inbox(limit=200)  # Max limit to search
+        for event in inbox.events:
+            if event.event_id == event_id:
+                return EventResponse(
+                    status="success",
+                    event_id=event.event_id,
+                    timestamp=event.timestamp,
+                    message="Event retrieved successfully",
+                    event_type=event.event_type,
+                    payload=event.payload,
+                    source=event.source,
+                    delivered=False,  # inbox only contains undelivered events
+                )
+        return None
+
+    async def mark_delivered_by_id(self, event_id: str) -> bool:
+        """
+        Mark an event as delivered by ID only (finds timestamp first).
+
+        Args:
+            event_id: Event UUID
+
+        Returns:
+            True if successful, False if event not found
+        """
+        # First find the event to get its timestamp
+        event = await self.get_by_id(event_id)
+        if not event:
+            return False
+
+        # Now mark it as delivered using the found timestamp
+        return await self.mark_delivered(event_id, event.timestamp)
