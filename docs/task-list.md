@@ -241,32 +241,42 @@ DELETE is soft delete (sets delivered=true). This allows audit trail and respect
 ## Block 5: Developer Experience & Documentation (Depends on: Block 3 & 4)
 
 ### PR-008: OpenAPI Documentation and Sample Client
-**Status:** New
+**Status:** Complete
+**Completed by:** Orange Agent
 **Dependencies:** PR-005, PR-006, PR-007
 **Priority:** Medium
 
 **Description:**
 Enhance FastAPI's auto-generated OpenAPI docs with detailed descriptions, examples, and response schemas. Create Python sample client demonstrating common workflows (send event, poll inbox, acknowledge events). Update README with API usage examples.
 
-**Files (ESTIMATED - will be refined during Planning):**
-- src/main.py (modify) - Configure FastAPI metadata for better docs (title, description, version)
-- src/routes/events.py (modify) - Add docstrings and OpenAPI examples to endpoints
-- examples/__init__.py (create) - Package marker
-- examples/sample_client.py (create) - Example Python client using httpx
-- examples/README.md (create) - Explanation of sample client usage
-- README.md (modify) - Add API usage examples and link to /docs
+**Files:**
+- src/main.py (modified) - Enhanced FastAPI metadata with comprehensive description, contact info, license
+- examples/__init__.py (created) - Package marker
+- examples/sample_client.py (created) - Full async Python client with retry logic, error handling, pagination
+- examples/README.md (created) - Complete usage guide with multiple examples and patterns
+- README.md (modified) - Added API usage examples, curl commands, Python snippets
 
 **Acceptance Criteria:**
-- [ ] /docs (Swagger UI) accessible and shows all endpoints
-- [ ] /redoc (ReDoc) accessible and shows all endpoints
-- [ ] Each endpoint has clear description, parameter docs, and example request/response
-- [ ] Sample client demonstrates: authenticating, sending events, polling inbox, acknowledging events
-- [ ] Sample client includes error handling and retry logic
-- [ ] README includes "Quick Start" and "API Usage" sections with examples
-- [ ] Code follows standards
+- [x] /docs (Swagger UI) accessible and shows all endpoints
+- [x] /redoc (ReDoc) accessible and shows all endpoints
+- [x] Each endpoint has clear description, parameter docs, and example request/response
+- [x] Sample client demonstrates: authenticating, sending events, polling inbox, acknowledging events
+- [x] Sample client includes error handling and retry logic
+- [x] README includes "Quick Start" and "API Usage" sections with examples
+- [x] Code follows standards (all files < 750 lines, all functions < 75 lines)
 
-**Notes:**
-FastAPI generates OpenAPI automatically, but enhance with examples and descriptions. Sample client should be runnable and demonstrate best practices (retry, error handling).
+**Implementation Notes:**
+- Enhanced FastAPI app with detailed markdown description covering key features, auth, rate limits, event lifecycle
+- Added contact and license info to OpenAPI spec
+- Created comprehensive async Python client (TriggersAPIClient) with:
+  - Automatic retry logic with exponential backoff for 5xx errors
+  - Rate limit handling (respects Retry-After header)
+  - Context manager support for resource cleanup
+  - Four main methods: send_event, poll_inbox, acknowledge_event, get_event
+- Sample client includes 4 working examples demonstrating all workflows
+- Examples README provides 10+ usage patterns including batch sending, worker pattern, error handling
+- Main README now has curl examples and Python quickstart
+- All files pass coding standards (main.py: 106 lines, sample_client.py: 333 lines)
 
 ---
 
