@@ -13,11 +13,11 @@ from src.schemas.event import (
 )
 from src.services.event_service import EventService
 
-router = APIRouter(prefix="/events", tags=["Events"])
+router = APIRouter(tags=["Events"])
 
 
 @router.post(
-    "",
+    "/events",
     response_model=EventResponse,
     status_code=status.HTTP_200_OK,
     responses={
@@ -255,7 +255,7 @@ async def get_inbox(
 
 
 @router.get(
-    "/{event_id}",
+    "/inbox/{event_id}",
     response_model=EventResponse,
     status_code=status.HTTP_200_OK,
     responses={
@@ -329,7 +329,7 @@ async def get_event(
 
 
 @router.delete(
-    "/{event_id}",
+    "/inbox/{event_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         204: {
