@@ -322,9 +322,41 @@ None - DELETE issue resolved!
 ### Block 6: Testing & Quality
 
 #### PR-010: Integration Tests for Full Event Lifecycle
-**Status:** New
+**Status:** Complete
+**Started:** 2025-11-11
+**Completed:** 2025-11-11
+**Agent:** Blonde
 **Dependencies:** PR-005, PR-006, PR-007
-**Notes:** End-to-end tests with LocalStack
+**Notes:**
+- Created comprehensive integration test suite with 18 tests
+- Tests run against real LocalStack DynamoDB (not mocked)
+- Files created:
+  - tests/integration/__init__.py (1 line) - Package marker
+  - tests/integration/conftest.py (147 lines) - Pytest fixtures with DynamoDB setup/teardown
+  - tests/integration/test_event_lifecycle.py (285 lines) - 8 lifecycle tests
+  - tests/integration/test_authentication_flow.py (330 lines) - 10 auth/rate limit tests
+- Files modified:
+  - README.md - Added comprehensive integration testing documentation
+- Event lifecycle tests (8 tests):
+  - Full lifecycle: POST event → GET inbox → GET event → DELETE → verify inbox empty
+  - Pagination with 10 events across 2 pages
+  - Empty inbox handling
+  - DELETE idempotency (returns 204 for already-delivered)
+  - GET/DELETE nonexistent event (404)
+  - Max limit validation and invalid cursor handling
+- Authentication flow tests (10 tests):
+  - Missing/invalid/malformed Authorization header (401)
+  - Valid/revoked/inactive API keys (200/403/403)
+  - Rate limiting: exceed limit (429), reset after window, per-key isolation
+  - All endpoints require authentication
+- Key features:
+  - Fresh DynamoDB tables created/destroyed per test for isolation
+  - API key fixtures with bcrypt hashing
+  - Tests marked with @pytest.mark.integration
+  - Configurable endpoint (defaults to localhost:4566)
+  - Comprehensive README docs for running integration tests
+- All code follows standards (functions < 75 lines, files < 750 lines, type hints)
+- Tests are idempotent and can be run multiple times
 
 #### PR-011: Unit Tests for Edge Cases and Error Scenarios
 **Status:** New
