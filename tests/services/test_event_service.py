@@ -296,3 +296,262 @@ async def test_mark_delivered_not_found(event_service, mock_repository):
     result = await event_service.mark_delivered("nonexistent", "2025-11-11T12:00:00Z")
 
     assert result is False
+
+
+# Edge Case Tests
+
+
+@pytest.mark.asyncio
+async def test_ingest_event_type_single_char(event_service, mock_repository):
+    """Test event_type with single character (minimum valid length)."""
+    request = CreateEventRequest(
+        event_type="a",
+        payload={"test": "data"},
+    )
+
+    response = await event_service.ingest(request)
+
+    assert response.status == "accepted"
+    assert response.event_id is not None
+    mock_repository.create.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_ingest_event_type_max_length(event_service, mock_repository):
+    """Test event_type with exactly 255 characters (maximum valid length)."""
+    request = CreateEventRequest(
+        event_type="a" * 255,
+        payload={"test": "data"},
+    )
+
+    response = await event_service.ingest(request)
+
+    assert response.status == "accepted"
+    assert response.event_id is not None
+    mock_repository.create.assert_called_once()
+    created_event = mock_repository.create.call_args[0][0]
+    assert len(created_event.event_type) == 255
+
+
+def test_ingest_event_type_empty_raises_validation_error():
+    """Test event_type with empty string raises ValidationError."""
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError) as exc_info:
+        CreateEventRequest(
+            event_type="",
+            payload={"test": "data"},
+        )
+
+    assert "event_type" in str(exc_info.value).lower()
+    assert "at least 1 character" in str(exc_info.value).lower()
+
+
+def test_ingest_event_type_too_long_raises_validation_error():
+    """Test event_type with 256 characters raises ValidationError."""
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError) as exc_info:
+        CreateEventRequest(
+            event_type="a" * 256,
+            payload={"test": "data"},
+        )
+
+    assert "event_type" in str(exc_info.value).lower()
+    assert "at most 255 characters" in str(exc_info.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_ingest_payload_exactly_256kb(event_service, mock_repository):
+    """Test payload at exactly 256KB (should succeed)."""
+    # Calculate size to get exactly 256KB when JSON-encoded
+    # Account for JSON structure: {"key": "value"}
+    target_size = 256 * 1024
+    # Subtract overhead for JSON structure
+    overhead = len('{"data":""}')
+    value_size = target_size - overhead - 1  # Subtract 1 more for safety
+
+    large_payload = {"data": "x" * value_size}
+
+    request = CreateEventRequest(
+        event_type="test.large",
+        payload=large_payload,
+    )
+
+    response = await event_service.ingest(request)
+
+    assert response.status == "accepted"
+    assert response.event_id is not None
+    mock_repository.create.assert_called_once()
+
+
+def test_ingest_payload_exceeds_256kb_raises_validation_error():
+    """Test payload exceeding 256KB raises ValidationError."""
+    from pydantic import ValidationError
+
+    # Create payload larger than 256KB
+    target_size = 257 * 1024
+    overhead = len('{"data":""}')
+    value_size = target_size - overhead
+
+    large_payload = {"data": "x" * value_size}
+
+    with pytest.raises(ValidationError) as exc_info:
+        CreateEventRequest(
+            event_type="test.toolarge",
+            payload=large_payload,
+        )
+
+    assert "payload" in str(exc_info.value).lower()
+    assert "exceeds maximum" in str(exc_info.value).lower()
+
+
+def test_ingest_payload_at_255kb_succeeds():
+    """Test payload at 255KB (should succeed)."""
+    target_size = 255 * 1024
+    overhead = len('{"data":""}')
+    value_size = target_size - overhead
+
+    large_payload = {"data": "x" * value_size}
+
+    # Should not raise
+    request = CreateEventRequest(
+        event_type="test.large",
+        payload=large_payload,
+    )
+
+    assert request.event_type == "test.large"
+    assert len(request.payload["data"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_ingest_empty_payload_succeeds(event_service, mock_repository):
+    """Test ingesting event with empty payload dictionary."""
+    request = CreateEventRequest(
+        event_type="test.empty",
+        payload={},
+    )
+
+    response = await event_service.ingest(request)
+
+    assert response.status == "accepted"
+    assert response.event_id is not None
+    mock_repository.create.assert_called_once()
+    created_event = mock_repository.create.call_args[0][0]
+    assert created_event.payload == {}
+
+
+@pytest.mark.asyncio
+async def test_ingest_complex_nested_payload(event_service, mock_repository):
+    """Test ingesting event with deeply nested payload."""
+    complex_payload = {
+        "level1": {
+            "level2": {
+                "level3": {
+                    "level4": {"data": "nested", "array": [1, 2, 3, {"key": "value"}]}
+                }
+            }
+        },
+        "array": [1, 2, 3, [4, 5, [6, 7]]],
+        "mixed": [{"a": 1}, {"b": 2}, [3, 4]],
+    }
+
+    request = CreateEventRequest(
+        event_type="test.nested",
+        payload=complex_payload,
+    )
+
+    response = await event_service.ingest(request)
+
+    assert response.status == "accepted"
+    mock_repository.create.assert_called_once()
+    created_event = mock_repository.create.call_args[0][0]
+    assert created_event.payload == complex_payload
+
+
+@pytest.mark.asyncio
+async def test_list_inbox_empty(event_service, mock_repository):
+    """Test listing inbox when no events exist."""
+    mock_repository.list_undelivered.return_value = ([], None)
+
+    response = await event_service.list_inbox()
+
+    assert len(response.events) == 0
+    assert response.pagination.has_more is False
+    assert response.pagination.next_cursor is None
+    assert response.pagination.total_undelivered == 0
+
+
+@pytest.mark.asyncio
+async def test_list_inbox_exactly_at_limit(event_service, mock_repository):
+    """Test listing inbox when result count equals limit."""
+    mock_events = [
+        Event(
+            event_id=f"event-{i}",
+            timestamp=f"2025-11-11T12:{i:02d}:00Z",
+            event_type="test.event",
+            payload={"index": i},
+            source=None,
+            metadata=None,
+            delivered=False,
+            created_at=f"2025-11-11T12:{i:02d}:00Z",
+            updated_at=f"2025-11-11T12:{i:02d}:00Z",
+        )
+        for i in range(50)
+    ]
+    mock_repository.list_undelivered.return_value = (mock_events, None)
+
+    response = await event_service.list_inbox(limit=50)
+
+    assert len(response.events) == 50
+    assert response.pagination.has_more is False
+
+
+@pytest.mark.asyncio
+async def test_list_inbox_cursor_with_special_characters(
+    event_service, mock_repository
+):
+    """Test cursor with special characters is handled properly."""
+    import json
+
+    # Create cursor with special characters
+    cursor_data = {
+        "event_id": "test-id-with-!@#$%",
+        "timestamp": "2025-11-11T12:00:00Z",
+    }
+    cursor = json.dumps(cursor_data)
+
+    mock_repository.list_undelivered.return_value = ([], None)
+
+    response = await event_service.list_inbox(cursor=cursor)
+
+    # Should decode cursor correctly
+    mock_repository.list_undelivered.assert_called_with(
+        limit=50, last_evaluated_key=cursor_data
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_inbox_malformed_cursor_starts_from_beginning(
+    event_service, mock_repository
+):
+    """Test malformed cursor falls back to starting from beginning."""
+    mock_repository.list_undelivered.return_value = ([], None)
+
+    # Various malformed cursors that should all fall back to None
+    malformed_cursors = [
+        "not-json",
+        "{invalid json",
+        '{"incomplete":',
+    ]
+
+    for cursor in malformed_cursors:
+        mock_repository.list_undelivered.reset_mock()  # Reset mock between calls
+        await event_service.list_inbox(cursor=cursor)
+        # Should fall back to None (start from beginning)
+        mock_repository.list_undelivered.assert_called_once_with(
+            limit=50, last_evaluated_key=None
+        )
+
+    # Note: "null" and "123" are valid JSON and will be parsed (though may fail later)
+    # So they're not true malformed cursor tests
