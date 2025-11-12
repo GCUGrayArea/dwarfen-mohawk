@@ -1,6 +1,6 @@
 # Progress - Zapier Triggers API
 
-**Last Updated:** 2025-11-11 (PR-012 complete)
+**Last Updated:** 2025-11-11 (PR-009 and PR-010 complete)
 
 This document tracks what actually works, known issues, and implementation status.
 
@@ -8,9 +8,9 @@ This document tracks what actually works, known issues, and implementation statu
 
 ## Implementation Status
 
-**Project Phase:** API Routes & Testing (Block 3-4, 6)
-**Overall Completion:** 33.3% (6 of 18 PRs complete)
-**Ready to Start:** PR-005, PR-008, PR-010, PR-011 are now unblocked
+**Project Phase:** Testing & Documentation (Block 5-6)
+**Overall Completion:** 44.4% (8 of 18 PRs complete)
+**Ready to Start:** PR-011 (edge cases), PR-013 (logging), PR-014 (error handling) are now unblocked
 
 ---
 
@@ -90,6 +90,15 @@ This document tracks what actually works, known issues, and implementation statu
 - Bcrypt hashing for key storage
 - Works with LocalStack and AWS DynamoDB
 - Full test coverage with 13 comprehensive tests
+
+**✅ Health Check and API Status Endpoint (PR-009):**
+- GET /status endpoint for health checks and monitoring
+- Returns status ("ok"), version, and uptime_seconds
+- No authentication required (public endpoint)
+- Fast response time (< 10ms target, < 100ms verified in tests)
+- Module-level uptime tracking from application start
+- Dedicated status router for clean organization
+- 11 comprehensive tests with 100% coverage
 
 **Verified Functionality:**
 - Event creation via POST /events with authentication
@@ -284,9 +293,31 @@ None - DELETE issue resolved!
 **Notes:** Enhance docs and create Python example client
 
 #### PR-009: Health Check and API Status Endpoint
-**Status:** New
+**Status:** Complete
+**Started:** 2025-11-11
+**Completed:** 2025-11-11
+**Agent:** Pink
 **Dependencies:** PR-001
-**Notes:** Simple health check for monitoring
+**Notes:**
+- Created dedicated status router in src/routes/status.py (37 lines)
+- Moved /status endpoint from inline in main.py to dedicated router
+- Tracks application uptime using module-level _app_start_time variable
+- Returns JSON with status ("ok"), version (from config), and uptime_seconds
+- No authentication required (as specified for health checks)
+- 11 comprehensive tests with 100% coverage of status.py:
+  - test_status_endpoint_returns_200
+  - test_status_endpoint_returns_json
+  - test_status_endpoint_has_required_fields
+  - test_status_field_is_ok
+  - test_version_field_is_string
+  - test_uptime_is_integer
+  - test_uptime_is_non_negative
+  - test_uptime_increases_over_time
+  - test_status_endpoint_no_authentication_required
+  - test_status_endpoint_response_time (< 100ms)
+  - test_status_endpoint_multiple_calls
+- All code follows standards (functions < 75 lines, files < 750 lines, type hints)
+- All tests pass, ruff linting clean
 
 ### Block 6: Testing & Quality
 
