@@ -129,3 +129,61 @@ class EventNotFoundError(TriggerAPIException):
             error_code="NOT_FOUND",
             details=error_details,
         )
+
+
+class ServiceUnavailableError(TriggerAPIException):
+    """Raised when a dependent service is unavailable (503)."""
+
+    def __init__(
+        self,
+        message: str = "Service temporarily unavailable",
+        service: str | None = None,
+        retry_after: int = 60,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        """
+        Initialize ServiceUnavailableError.
+
+        Args:
+            message: Error message
+            service: Name of the unavailable service
+            retry_after: Seconds until retry is recommended
+            details: Additional error details
+        """
+        error_details = details or {}
+        error_details["retry_after"] = retry_after
+        if service:
+            error_details["service"] = service
+        super().__init__(
+            message=message,
+            status_code=503,
+            error_code="SERVICE_UNAVAILABLE",
+            details=error_details,
+        )
+
+
+class RequestTooLargeError(TriggerAPIException):
+    """Raised when request payload exceeds size limit (413)."""
+
+    def __init__(
+        self,
+        message: str = "Request payload too large",
+        max_size: str = "512KB",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        """
+        Initialize RequestTooLargeError.
+
+        Args:
+            message: Error message
+            max_size: Maximum allowed size
+            details: Additional error details
+        """
+        error_details = details or {}
+        error_details["max_size"] = max_size
+        super().__init__(
+            message=message,
+            status_code=413,
+            error_code="PAYLOAD_TOO_LARGE",
+            details=error_details,
+        )

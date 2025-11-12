@@ -12,6 +12,7 @@ from src.handlers.exception_handler import (
 )
 from src.logging.config import configure_logging
 from src.middleware.logging import LoggingMiddleware
+from src.middleware.request_validation import RequestSizeValidationMiddleware
 from src.routes import events, status
 
 # Configure logging before creating the app
@@ -81,6 +82,8 @@ for access.
 )
 
 # Register middleware (order matters: first added = outermost layer)
+# Request size validation should be first to reject oversized requests early
+app.add_middleware(RequestSizeValidationMiddleware)
 app.add_middleware(LoggingMiddleware)
 
 # Register exception handlers
