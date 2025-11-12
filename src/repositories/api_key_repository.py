@@ -2,7 +2,7 @@
 
 from src.config import settings
 from src.models.api_key import ApiKey
-from src.repositories.base import BaseRepository
+from src.repositories.base import BaseRepository, get_dynamodb_config
 
 
 class ApiKeyRepository(BaseRepository):
@@ -47,13 +47,7 @@ class ApiKeyRepository(BaseRepository):
         Returns:
             ApiKey if found, None otherwise
         """
-        async with self.session.resource(
-            "dynamodb",
-            region_name=settings.aws_region,
-            endpoint_url=settings.dynamodb_endpoint_url,
-            aws_access_key_id=settings.aws_access_key_id,
-            aws_secret_access_key=settings.aws_secret_access_key,
-        ) as dynamodb:
+        async with self.session.resource("dynamodb", **get_dynamodb_config()) as dynamodb:
             table = await dynamodb.Table(self.table_name)
 
             response = await table.scan(

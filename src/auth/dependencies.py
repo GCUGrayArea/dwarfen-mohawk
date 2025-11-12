@@ -4,10 +4,10 @@ from fastapi import Header
 from fastapi.security import HTTPBearer
 
 from src.auth.api_key import verify_api_key
-from src.config import settings
 from src.exceptions import ForbiddenError, UnauthorizedError
 from src.models.api_key import ApiKey
 from src.repositories.api_key_repository import ApiKeyRepository
+from src.repositories.base import get_dynamodb_config
 
 security = HTTPBearer()
 
@@ -58,13 +58,7 @@ async def verify_key_against_all(repo: ApiKeyRepository, api_key: str) -> ApiKey
         ApiKey if match found, None otherwise
     """
     # Scan all keys (not efficient at scale, but simple for MVP)
-    async with repo.session.resource(
-        "dynamodb",
-        region_name=settings.aws_region,
-        endpoint_url=settings.dynamodb_endpoint_url,
-        aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key,
-    ) as dynamodb:
+    async with repo.session.resource("dynamodb", **get_dynamodb_config()) as dynamodb:
         table = await dynamodb.Table(repo.table_name)
         response = await table.scan()
 

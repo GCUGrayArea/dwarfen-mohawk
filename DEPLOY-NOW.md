@@ -281,6 +281,7 @@ aws cloudformation create-stack \
   --parameters \
     ParameterKey=EnvironmentName,ParameterValue=production \
     ParameterKey=DynamoDBStackName,ParameterValue=zapier-triggers-dynamodb-production \
+    ParameterKey=LambdaCodeBucket,ParameterValue=${S3_BUCKET} \
     ParameterKey=LambdaMemorySize,ParameterValue=512 \
     ParameterKey=LambdaTimeout,ParameterValue=30 \
     ParameterKey=ApiStageName,ParameterValue=v1 \

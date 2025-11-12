@@ -13,7 +13,8 @@ from src.main import app
 
 # Create the Lambda handler using Mangum adapter
 # Mangum converts API Gateway events to ASGI requests and back
-handler = Mangum(app, lifespan="off")
+# api_gateway_base_path strips the stage name from paths
+handler = Mangum(app, lifespan="off", api_gateway_base_path="/v1")
 
 
 def lambda_handler(event: dict, context: object) -> dict:

@@ -44,6 +44,10 @@ Parameters:
       - WARNING
       - ERROR
 
+  LambdaCodeBucket:
+    Type: String
+    Description: S3 bucket containing the Lambda deployment package (lambda-deployment.zip)
+
 Resources:
   # Lambda Execution Role
   # Grants Lambda function permissions to access DynamoDB and CloudWatch Logs
@@ -99,7 +103,6 @@ Resources:
       Timeout: !Ref LambdaTimeout
       Environment:
         Variables:
-          AWS_REGION: !Ref AWS::Region
           DYNAMODB_TABLE_EVENTS:
             Fn::ImportValue: !Sub '${DynamoDBStackName}-EventsTableName'
           DYNAMODB_TABLE_API_KEYS:
@@ -116,14 +119,10 @@ Resources:
           MAX_INBOX_LIMIT: '200'
           DEFAULT_RATE_LIMIT_PER_MINUTE: '100'
       Code:
-        # Note: Code must be uploaded separately via deployment process
-        # This is a placeholder - actual deployment uses S3 bucket or inline zip
-        ZipFile: |
-          def lambda_handler(event, context):
-              return {
-                  'statusCode': 503,
-                  'body': 'Function code not deployed yet'
-              }
+        # Lambda code deployed from S3 bucket
+        # Bucket name will be set via parameter during deployment
+        S3Bucket: gauntlet-gray-deployments-us-east-2
+        S3Key: lambda-deployment.zip
       Tags:
         - Key: Environment
           Value: !Ref EnvironmentName
