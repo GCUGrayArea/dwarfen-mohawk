@@ -93,6 +93,10 @@ class EventService:
             event_id=event_id,
             timestamp=timestamp,
             message="Event successfully ingested",
+            event_type=event.event_type,
+            payload=event.payload,
+            source=event.source,
+            delivered=event.delivered,
         )
 
     async def get(self, event_id: str, timestamp: str) -> EventResponse | None:
