@@ -1,5 +1,8 @@
 """Configuration management using Pydantic Settings."""
 
+import os
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,16 +10,28 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Only load .env file in development (not Lambda/production)
+        env_file=".env" if os.getenv("AWS_EXECUTION_ENV") is None else None,
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
 
     # AWS Configuration
-    aws_region: str = "us-east-1"
+    aws_region: str = "us-east-2"  # Default to us-east-2 for production
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
+    aws_session_token: str | None = None  # Required for temporary credentials
+
+    @field_validator("aws_access_key_id", "aws_secret_access_key", mode="before")
+    @classmethod
+    def convert_empty_string_to_none(cls, v):
+        """Convert empty strings to None so boto3 can use IAM role in Lambda."""
+        if v is None:
+            return None
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
 
     # DynamoDB Configuration
     dynamodb_endpoint_url: str | None = None
