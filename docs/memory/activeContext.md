@@ -8,14 +8,52 @@ This document tracks current work focus, recent changes, and immediate context.
 
 ## Current Phase
 
-**Phase:** Integration Tests Complete
-**Status:** 7 PRs complete (PR-001 to PR-007, PR-010)
-**Current Focus:** Integration testing infrastructure established
-**Next Steps:** PR-008 (OpenAPI docs), PR-011 (edge case tests), PR-013 (logging)
+**Phase:** Deployment Configuration Complete
+**Status:** 15 PRs complete (PR-001 to PR-015)
+**Current Focus:** AWS Lambda deployment infrastructure ready
+**Next Steps:** PR-016 (performance testing), PR-017 (architecture docs), PR-018 (final cleanup)
 
 ---
 
 ## Recent Changes
+
+### 2025-11-11: AWS Lambda Deployment Configuration (Orange Agent)
+- **PR-015 Complete:** AWS deployment infrastructure created
+- **Lambda Handler:**
+  - Created src/lambda_handler.py with Mangum adapter
+  - Configured lifespan="off" for Lambda compatibility
+  - Stateless design suitable for serverless execution
+- **CloudFormation Templates:**
+  - infrastructure/cloudformation/dynamodb.yaml (130 lines)
+    - Events table with DeliveredIndex GSI for inbox queries
+    - API Keys table for authentication
+    - On-demand billing, KMS encryption, point-in-time recovery
+    - TTL configuration for automatic cleanup of delivered events
+    - Parameterized for environment, table names, retention
+  - infrastructure/cloudformation/api.yaml (318 lines)
+    - Lambda function with 512MB memory, 30s timeout (configurable)
+    - IAM role with least-privilege DynamoDB permissions
+    - HTTP API Gateway with CORS support
+    - API Gateway integration using AWS_PROXY
+    - CloudWatch Logs for Lambda and API Gateway
+    - All environment variables configurable via parameters
+- **Lambda Dependencies:**
+  - requirements-lambda.txt with production dependencies only
+  - Excludes dev tools (pytest, black, ruff, mypy, locust)
+  - Minimal package size for faster Lambda cold starts
+- **Deployment Documentation:**
+  - docs/deployment.md (550+ lines) comprehensive guide
+  - Prerequisites, architecture overview, step-by-step deployment
+  - Post-deployment testing, monitoring, troubleshooting
+  - Update and rollback procedures
+  - Cost estimation and optimization tips
+- **Files Created:**
+  - src/lambda_handler.py (43 lines)
+  - infrastructure/cloudformation/api.yaml (318 lines)
+  - infrastructure/cloudformation/dynamodb.yaml (130 lines)
+  - requirements-lambda.txt (26 lines)
+  - docs/deployment.md (550+ lines)
+- All code follows standards (functions < 75 lines, files < 750 lines, type hints)
 
 ### 2025-11-11: Integration Tests Implementation (Blonde Agent)
 - **PR-010 Complete:** Comprehensive integration test suite with 18 tests

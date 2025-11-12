@@ -32,7 +32,13 @@ This document captures architectural decisions and design patterns established d
 ### Local-First Development
 **Decision:** Build to run locally with Docker + LocalStack, design for AWS deployment
 **Rationale:** Faster development cycles, easier testing, no AWS costs during development
-**Status:** Planned (not yet implemented)
+**Status:** Implemented (local dev works, AWS deployment ready via CloudFormation)
+
+### Serverless Deployment
+**Decision:** Deploy to AWS Lambda + API Gateway using CloudFormation
+**Rationale:** Auto-scaling, pay-per-use pricing, minimal operational overhead
+**Implementation:** Mangum adapter wraps FastAPI for Lambda execution
+**Status:** Deployment-ready (templates created, not yet deployed)
 
 ---
 
@@ -103,6 +109,27 @@ These are acceptable for MVP, may be addressed in future iterations.
 
 ---
 
+## Deployment Patterns
+
+### CloudFormation Stack Organization
+**Pattern:** Separate stacks for database (DynamoDB) and application (Lambda + API Gateway)
+**Rationale:** Database is long-lived, application updates more frequently
+**Implementation:**
+- DynamoDB stack exports table names/ARNs
+- API stack imports these values via cross-stack references
+**Benefits:** Can update Lambda/API Gateway without touching database
+
+### Environment Isolation
+**Pattern:** Use stack parameters to create separate environments
+**Implementation:** EnvironmentName parameter creates suffixed resources
+**Example:** `zapier-events-production`, `zapier-events-staging`
+**Benefits:** Complete isolation between environments, same templates
+
+### Lambda Deployment Package
+**Pattern:** Minimal dependencies, production-only requirements
+**Implementation:** Separate requirements-lambda.txt without dev tools
+**Benefits:** Smaller package size, faster cold starts, reduced security surface
+
 ## Future Considerations
 
 **Items to revisit as system evolves:**
@@ -112,3 +139,6 @@ These are acceptable for MVP, may be addressed in future iterations.
 - Multi-tenancy and workspace isolation
 - Advanced event filtering and transformation
 - Webhook delivery (push model)
+- Provisioned concurrency for Lambda (reduce cold starts)
+- Custom domain name with Route 53
+- AWS X-Ray for distributed tracing
