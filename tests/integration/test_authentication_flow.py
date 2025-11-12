@@ -15,20 +15,11 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
-async def test_authentication_missing_header(
-    api_client: AsyncClient,
-    dynamodb_tables
-):
+async def test_authentication_missing_header(api_client: AsyncClient, dynamodb_tables):
     """Test that requests without Authorization header return 401."""
-    event_data = {
-        "event_type": "test.event",
-        "payload": {"test": "data"}
-    }
+    event_data = {"event_type": "test.event", "payload": {"test": "data"}}
 
-    response = await api_client.post(
-        "/events",
-        json=event_data
-    )
+    response = await api_client.post("/events", json=event_data)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     data = response.json()
@@ -38,41 +29,27 @@ async def test_authentication_missing_header(
 
 
 @pytest.mark.asyncio
-async def test_authentication_invalid_format(
-    api_client: AsyncClient,
-    dynamodb_tables
-):
+async def test_authentication_invalid_format(api_client: AsyncClient, dynamodb_tables):
     """Test that malformed Authorization header returns 401."""
-    event_data = {
-        "event_type": "test.event",
-        "payload": {"test": "data"}
-    }
+    event_data = {"event_type": "test.event", "payload": {"test": "data"}}
 
     # Missing "Bearer" prefix
     response = await api_client.post(
-        "/events",
-        json=event_data,
-        headers={"Authorization": "invalid_api_key_123"}
+        "/events", json=event_data, headers={"Authorization": "invalid_api_key_123"}
     )
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.asyncio
-async def test_authentication_invalid_key(
-    api_client: AsyncClient,
-    dynamodb_tables
-):
+async def test_authentication_invalid_key(api_client: AsyncClient, dynamodb_tables):
     """Test that invalid API key returns 401."""
-    event_data = {
-        "event_type": "test.event",
-        "payload": {"test": "data"}
-    }
+    event_data = {"event_type": "test.event", "payload": {"test": "data"}}
 
     response = await api_client.post(
         "/events",
         json=event_data,
-        headers={"Authorization": "Bearer nonexistent_key_12345"}
+        headers={"Authorization": "Bearer nonexistent_key_12345"},
     )
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -83,21 +60,12 @@ async def test_authentication_invalid_key(
 
 @pytest.mark.asyncio
 async def test_authentication_valid_key(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """Test that valid API key allows access."""
-    event_data = {
-        "event_type": "test.event",
-        "payload": {"test": "data"}
-    }
+    event_data = {"event_type": "test.event", "payload": {"test": "data"}}
 
-    response = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=auth_headers
-    )
+    response = await api_client.post("/events", json=event_data, headers=auth_headers)
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -105,10 +73,7 @@ async def test_authentication_valid_key(
 
 
 @pytest.mark.asyncio
-async def test_authentication_revoked_key(
-    api_client: AsyncClient,
-    dynamodb_tables
-):
+async def test_authentication_revoked_key(api_client: AsyncClient, dynamodb_tables):
     """Test that revoked API key returns 403."""
     # Create a revoked API key
     plaintext_key = "revoked_test_key_1234567890123456"
@@ -125,15 +90,10 @@ async def test_authentication_revoked_key(
     repo = ApiKeyRepository()
     await repo.create(revoked_key)
 
-    event_data = {
-        "event_type": "test.event",
-        "payload": {"test": "data"}
-    }
+    event_data = {"event_type": "test.event", "payload": {"test": "data"}}
 
     response = await api_client.post(
-        "/events",
-        json=event_data,
-        headers={"Authorization": f"Bearer {plaintext_key}"}
+        "/events", json=event_data, headers={"Authorization": f"Bearer {plaintext_key}"}
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -143,10 +103,7 @@ async def test_authentication_revoked_key(
 
 
 @pytest.mark.asyncio
-async def test_authentication_inactive_key(
-    api_client: AsyncClient,
-    dynamodb_tables
-):
+async def test_authentication_inactive_key(api_client: AsyncClient, dynamodb_tables):
     """Test that inactive API key returns 403."""
     # Create an inactive API key
     plaintext_key = "inactive_test_key_1234567890123456"
@@ -163,25 +120,17 @@ async def test_authentication_inactive_key(
     repo = ApiKeyRepository()
     await repo.create(inactive_key)
 
-    event_data = {
-        "event_type": "test.event",
-        "payload": {"test": "data"}
-    }
+    event_data = {"event_type": "test.event", "payload": {"test": "data"}}
 
     response = await api_client.post(
-        "/events",
-        json=event_data,
-        headers={"Authorization": f"Bearer {plaintext_key}"}
+        "/events", json=event_data, headers={"Authorization": f"Bearer {plaintext_key}"}
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_exceed_limit(
-    api_client: AsyncClient,
-    dynamodb_tables
-):
+async def test_rate_limiting_exceed_limit(api_client: AsyncClient, dynamodb_tables):
     """
     Test that exceeding rate limit returns 429.
 
@@ -202,35 +151,20 @@ async def test_rate_limiting_exceed_limit(
     repo = ApiKeyRepository()
     await repo.create(limited_key)
 
-    event_data = {
-        "event_type": "test.rate.limit",
-        "payload": {"test": "rate_limiting"}
-    }
+    event_data = {"event_type": "test.rate.limit", "payload": {"test": "rate_limiting"}}
 
     headers = {"Authorization": f"Bearer {plaintext_key}"}
 
     # Make first request (should succeed)
-    response1 = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=headers
-    )
+    response1 = await api_client.post("/events", json=event_data, headers=headers)
     assert response1.status_code == status.HTTP_200_OK
 
     # Make second request (should succeed)
-    response2 = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=headers
-    )
+    response2 = await api_client.post("/events", json=event_data, headers=headers)
     assert response2.status_code == status.HTTP_200_OK
 
     # Make third request (should be rate limited)
-    response3 = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=headers
-    )
+    response3 = await api_client.post("/events", json=event_data, headers=headers)
     assert response3.status_code == status.HTTP_429_TOO_MANY_REQUESTS
     data = response3.json()
     assert data["status"] == "error"
@@ -244,8 +178,7 @@ async def test_rate_limiting_exceed_limit(
 
 @pytest.mark.asyncio
 async def test_rate_limiting_reset_after_window(
-    api_client: AsyncClient,
-    dynamodb_tables
+    api_client: AsyncClient, dynamodb_tables
 ):
     """
     Test that rate limit resets after time window.
@@ -267,27 +200,16 @@ async def test_rate_limiting_reset_after_window(
     repo = ApiKeyRepository()
     await repo.create(limited_key)
 
-    event_data = {
-        "event_type": "test.rate.reset",
-        "payload": {"test": "rate_reset"}
-    }
+    event_data = {"event_type": "test.rate.reset", "payload": {"test": "rate_reset"}}
 
     headers = {"Authorization": f"Bearer {plaintext_key}"}
 
     # Make first request (should succeed)
-    response1 = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=headers
-    )
+    response1 = await api_client.post("/events", json=event_data, headers=headers)
     assert response1.status_code == status.HTTP_200_OK
 
     # Make second request immediately (should fail)
-    response2 = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=headers
-    )
+    response2 = await api_client.post("/events", json=event_data, headers=headers)
     assert response2.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
     # Wait for rate limit window to reset (60 seconds + buffer)
@@ -296,18 +218,13 @@ async def test_rate_limiting_reset_after_window(
     await asyncio.sleep(61)
 
     # Make request after window reset (should succeed)
-    response3 = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=headers
-    )
+    response3 = await api_client.post("/events", json=event_data, headers=headers)
     assert response3.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.asyncio
 async def test_rate_limiting_per_key_isolation(
-    api_client: AsyncClient,
-    dynamodb_tables
+    api_client: AsyncClient, dynamodb_tables
 ):
     """
     Test that rate limits are isolated per API key.
@@ -341,16 +258,13 @@ async def test_rate_limiting_per_key_isolation(
     await repo.create(key1)
     await repo.create(key2)
 
-    event_data = {
-        "event_type": "test.isolation",
-        "payload": {"test": "isolation"}
-    }
+    event_data = {"event_type": "test.isolation", "payload": {"test": "isolation"}}
 
     # Exhaust key1's rate limit
     response1 = await api_client.post(
         "/events",
         json=event_data,
-        headers={"Authorization": f"Bearer {key1_plaintext}"}
+        headers={"Authorization": f"Bearer {key1_plaintext}"},
     )
     assert response1.status_code == status.HTTP_200_OK
 
@@ -358,7 +272,7 @@ async def test_rate_limiting_per_key_isolation(
     response2 = await api_client.post(
         "/events",
         json=event_data,
-        headers={"Authorization": f"Bearer {key1_plaintext}"}
+        headers={"Authorization": f"Bearer {key1_plaintext}"},
     )
     assert response2.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
@@ -366,15 +280,14 @@ async def test_rate_limiting_per_key_isolation(
     response3 = await api_client.post(
         "/events",
         json=event_data,
-        headers={"Authorization": f"Bearer {key2_plaintext}"}
+        headers={"Authorization": f"Bearer {key2_plaintext}"},
     )
     assert response3.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.asyncio
 async def test_authentication_all_endpoints_protected(
-    api_client: AsyncClient,
-    dynamodb_tables
+    api_client: AsyncClient, dynamodb_tables
 ):
     """Test that all endpoints require authentication."""
     # Test GET /inbox
@@ -383,14 +296,12 @@ async def test_authentication_all_endpoints_protected(
 
     # Test GET /events/{id}
     get_response = await api_client.get(
-        "/events/test-id",
-        params={"timestamp": "2025-11-11T00:00:00Z"}
+        "/events/test-id", params={"timestamp": "2025-11-11T00:00:00Z"}
     )
     assert get_response.status_code == status.HTTP_401_UNAUTHORIZED
 
     # Test DELETE /events/{id}
     delete_response = await api_client.delete(
-        "/events/test-id",
-        params={"timestamp": "2025-11-11T00:00:00Z"}
+        "/events/test-id", params={"timestamp": "2025-11-11T00:00:00Z"}
     )
     assert delete_response.status_code == status.HTTP_401_UNAUTHORIZED

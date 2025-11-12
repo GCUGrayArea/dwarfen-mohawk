@@ -1,6 +1,5 @@
 """API Key model for DynamoDB."""
 
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -22,22 +21,16 @@ class ApiKey(BaseModel):
 
     key_id: str = Field(..., description="Unique key identifier (UUID)")
     key_hash: str = Field(..., description="Bcrypt hash of API key")
-    status: str = Field(
-        ..., description="Key status: active, inactive, revoked"
-    )
-    rate_limit: int = Field(
-        default=100, description="Requests per minute"
-    )
-    allowed_event_types: Optional[List[str]] = Field(
+    status: str = Field(..., description="Key status: active, inactive, revoked")
+    rate_limit: int = Field(default=100, description="Requests per minute")
+    allowed_event_types: list[str] | None = Field(
         None, description="List of allowed event types (None = all)"
     )
     created_at: str = Field(..., description="ISO 8601 creation timestamp")
-    last_used_at: Optional[str] = Field(
+    last_used_at: str | None = Field(
         None, description="ISO 8601 last used timestamp"
     )
-    description: Optional[str] = Field(
-        None, description="Human-readable description"
-    )
+    description: str | None = Field(None, description="Human-readable description")
 
     class Config:
         """Pydantic configuration."""

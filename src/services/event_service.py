@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
 
 from src.config import settings
 from src.models.event import Event
@@ -27,8 +26,8 @@ class EventService:
 
     def __init__(
         self,
-        repository: Optional[EventRepository] = None,
-        dedup_cache: Optional[DeduplicationCache] = None,
+        repository: EventRepository | None = None,
+        dedup_cache: DeduplicationCache | None = None,
     ) -> None:
         """
         Initialize EventService.
@@ -42,9 +41,7 @@ class EventService:
             window_seconds=settings.deduplication_window_seconds
         )
 
-    async def ingest(
-        self, request: CreateEventRequest
-    ) -> EventResponse:
+    async def ingest(self, request: CreateEventRequest) -> EventResponse:
         """
         Ingest a new event.
 
@@ -98,9 +95,7 @@ class EventService:
             message="Event successfully ingested",
         )
 
-    async def get(
-        self, event_id: str, timestamp: str
-    ) -> Optional[EventResponse]:
+    async def get(self, event_id: str, timestamp: str) -> EventResponse | None:
         """
         Get a specific event by ID and timestamp.
 
@@ -128,7 +123,7 @@ class EventService:
         )
 
     async def list_inbox(
-        self, limit: int = 50, cursor: Optional[str] = None
+        self, limit: int = 50, cursor: str | None = None
     ) -> InboxResponse:
         """
         List undelivered events with pagination.
@@ -195,9 +190,7 @@ class EventService:
 
         return InboxResponse(events=event_items, pagination=pagination)
 
-    async def mark_delivered(
-        self, event_id: str, timestamp: str
-    ) -> bool:
+    async def mark_delivered(self, event_id: str, timestamp: str) -> bool:
         """
         Mark an event as delivered.
 
@@ -208,7 +201,5 @@ class EventService:
         Returns:
             True if successful, False if event not found
         """
-        result = await self.repository.mark_delivered(
-            event_id, timestamp
-        )
+        result = await self.repository.mark_delivered(event_id, timestamp)
         return result is not None

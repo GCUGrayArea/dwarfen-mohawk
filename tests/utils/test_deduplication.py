@@ -3,8 +3,6 @@
 import time
 from unittest.mock import patch
 
-import pytest
-
 from src.utils.deduplication import DeduplicationCache
 
 
@@ -34,15 +32,9 @@ def test_fingerprint_differs_for_different_events():
     """Test different events produce different fingerprints."""
     cache = DeduplicationCache()
 
-    fp1 = cache._generate_fingerprint(
-        "user.login", {"user_id": "123"}
-    )
-    fp2 = cache._generate_fingerprint(
-        "user.login", {"user_id": "456"}
-    )
-    fp3 = cache._generate_fingerprint(
-        "user.logout", {"user_id": "123"}
-    )
+    fp1 = cache._generate_fingerprint("user.login", {"user_id": "123"})
+    fp2 = cache._generate_fingerprint("user.login", {"user_id": "456"})
+    fp3 = cache._generate_fingerprint("user.logout", {"user_id": "123"})
 
     assert fp1 != fp2  # Different payload
     assert fp1 != fp3  # Different event type
@@ -110,9 +102,7 @@ def test_cleanup_expired_entries():
     assert len(cache._cache) == 1
 
     # Original event should not be found (expired)
-    result = cache.check_and_add(
-        "test.event", {"data": "test"}, "event-789"
-    )
+    result = cache.check_and_add("test.event", {"data": "test"}, "event-789")
     assert result is None  # Not a duplicate anymore
 
 
@@ -134,9 +124,7 @@ def test_multiple_different_events():
 
     # Add different events
     for i in range(5):
-        result = cache.check_and_add(
-            f"event.{i}", {"index": i}, f"event-{i}"
-        )
+        result = cache.check_and_add(f"event.{i}", {"index": i}, f"event-{i}")
         assert result is None
 
     assert len(cache._cache) == 5

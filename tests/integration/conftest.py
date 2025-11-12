@@ -2,7 +2,7 @@
 
 import asyncio
 import os
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
 
 import aioboto3
 import pytest
@@ -34,10 +34,7 @@ async def dynamodb_tables() -> AsyncGenerator:
     """
     # Use localhost endpoint for integration tests
     # (assumes LocalStack is running on localhost:4566)
-    endpoint_url = os.getenv(
-        "DYNAMODB_ENDPOINT_URL",
-        "http://localhost:4566"
-    )
+    endpoint_url = os.getenv("DYNAMODB_ENDPOINT_URL", "http://localhost:4566")
 
     session = aioboto3.Session()
 
@@ -111,17 +108,13 @@ async def dynamodb_tables() -> AsyncGenerator:
 
         # Cleanup: Delete tables after test
         try:
-            events_table = await dynamodb.Table(
-                settings.dynamodb_table_events
-            )
+            events_table = await dynamodb.Table(settings.dynamodb_table_events)
             await events_table.delete()
         except Exception:
             pass
 
         try:
-            api_keys_table = await dynamodb.Table(
-                settings.dynamodb_table_api_keys
-            )
+            api_keys_table = await dynamodb.Table(settings.dynamodb_table_api_keys)
             await api_keys_table.delete()
         except Exception:
             pass
@@ -131,8 +124,7 @@ async def dynamodb_tables() -> AsyncGenerator:
 async def api_client() -> AsyncGenerator[AsyncClient, None]:
     """Create async HTTP client for testing API endpoints."""
     async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
         yield client
 

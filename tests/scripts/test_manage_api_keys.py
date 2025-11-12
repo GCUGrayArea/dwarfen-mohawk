@@ -1,8 +1,7 @@
 """Tests for API key management CLI."""
 
 import uuid
-from datetime import datetime, timezone
-from io import StringIO
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -29,9 +28,7 @@ class TestGenerateApiKey:
         """Test that API key contains only alphanumeric chars."""
         key = generate_api_key()
         # URL-safe base64 uses alphanumeric + - and _
-        assert all(
-            c.isalnum() or c in ["-", "_"] for c in key
-        )
+        assert all(c.isalnum() or c in ["-", "_"] for c in key)
 
     def test_generates_unique_keys(self) -> None:
         """Test that consecutive calls generate different keys."""
@@ -120,9 +117,7 @@ class TestCmdGenerate:
 
             # Count how many times "API Key:" appears in print calls
             api_key_prints = [
-                call
-                for call in mock_print.call_args_list
-                if "API Key:" in str(call)
+                call for call in mock_print.call_args_list if "API Key:" in str(call)
             ]
             assert len(api_key_prints) == 1
 
@@ -172,7 +167,7 @@ class TestCmdList:
             key_hash="hash1",
             status="active",
             rate_limit=100,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
             description="Key 1",
         )
         key2 = ApiKey(
@@ -180,7 +175,7 @@ class TestCmdList:
             key_hash="hash2",
             status="revoked",
             rate_limit=200,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
             description="Key 2",
         )
 
@@ -230,7 +225,7 @@ class TestCmdRevoke:
             key_hash="hash",
             status="active",
             rate_limit=100,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
 
         mock_table = MagicMock()
@@ -265,9 +260,7 @@ class TestCmdRevoke:
 
             # Verify correct key and status
             assert update_args[1]["Key"]["key_id"] == key_id
-            assert update_args[1]["ExpressionAttributeValues"][
-                ":status"
-            ] == "revoked"
+            assert update_args[1]["ExpressionAttributeValues"][":status"] == "revoked"
 
             # Verify success message
             printed_text = " ".join(
@@ -284,7 +277,7 @@ class TestCmdRevoke:
             key_hash="hash",
             status="revoked",
             rate_limit=100,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
 
         mock_repo = MagicMock()
@@ -346,7 +339,7 @@ class TestCmdUpdateRateLimit:
             key_hash="hash",
             status="active",
             rate_limit=100,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
 
         mock_table = MagicMock()
@@ -381,9 +374,7 @@ class TestCmdUpdateRateLimit:
 
             # Verify correct key and rate_limit
             assert update_args[1]["Key"]["key_id"] == key_id
-            assert update_args[1]["ExpressionAttributeValues"][
-                ":rate_limit"
-            ] == 500
+            assert update_args[1]["ExpressionAttributeValues"][":rate_limit"] == 500
 
             # Verify success message with new rate limit
             printed_text = " ".join(

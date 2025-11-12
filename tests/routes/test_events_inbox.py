@@ -67,28 +67,26 @@ def sample_events():
 
 
 @pytest.mark.asyncio
-async def test_get_inbox_success(
-    valid_api_key, mock_api_key_model, sample_events
-):
+async def test_get_inbox_success(valid_api_key, mock_api_key_model, sample_events):
     """Test successful retrieval of inbox events."""
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.services.event_service.EventRepository"
-    ) as mock_repo_class, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch("src.services.event_service.EventRepository") as mock_repo_class,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         # Setup mocks
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = True
 
         mock_repo = AsyncMock()
-        mock_repo.list_undelivered = AsyncMock(
-            return_value=(sample_events, None)
-        )
+        mock_repo.list_undelivered = AsyncMock(return_value=(sample_events, None))
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.get(
                 "/events/inbox",
                 headers={"Authorization": f"Bearer {valid_api_key}"},
@@ -106,17 +104,15 @@ async def test_get_inbox_success(
 
 
 @pytest.mark.asyncio
-async def test_get_inbox_with_limit(
-    valid_api_key, mock_api_key_model, sample_events
-):
+async def test_get_inbox_with_limit(valid_api_key, mock_api_key_model, sample_events):
     """Test inbox retrieval with custom limit."""
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.services.event_service.EventRepository"
-    ) as mock_repo_class, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch("src.services.event_service.EventRepository") as mock_repo_class,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         # Setup mocks
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = True
@@ -127,7 +123,9 @@ async def test_get_inbox_with_limit(
         )
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.get(
                 "/events/inbox?limit=2",
                 headers={"Authorization": f"Bearer {valid_api_key}"},
@@ -141,32 +139,30 @@ async def test_get_inbox_with_limit(
 
 
 @pytest.mark.asyncio
-async def test_get_inbox_with_cursor(
-    valid_api_key, mock_api_key_model, sample_events
-):
+async def test_get_inbox_with_cursor(valid_api_key, mock_api_key_model, sample_events):
     """Test inbox pagination with cursor."""
     import json
 
     cursor = json.dumps({"event_id": "event-2"})
 
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.services.event_service.EventRepository"
-    ) as mock_repo_class, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch("src.services.event_service.EventRepository") as mock_repo_class,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         # Setup mocks
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = True
 
         mock_repo = AsyncMock()
-        mock_repo.list_undelivered = AsyncMock(
-            return_value=([sample_events[2]], None)
-        )
+        mock_repo.list_undelivered = AsyncMock(return_value=([sample_events[2]], None))
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.get(
                 f"/events/inbox?cursor={cursor}",
                 headers={"Authorization": f"Bearer {valid_api_key}"},
@@ -184,13 +180,13 @@ async def test_get_inbox_empty():
     """Test inbox retrieval when no events exist."""
     valid_api_key = "test_api_key_12345678901234567890123456789012"
 
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.services.event_service.EventRepository"
-    ) as mock_repo_class, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch("src.services.event_service.EventRepository") as mock_repo_class,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         # Setup mocks
         mock_api_key = ApiKey(
             key_id="test-key-id",
@@ -206,7 +202,9 @@ async def test_get_inbox_empty():
         mock_repo.list_undelivered = AsyncMock(return_value=([], None))
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.get(
                 "/events/inbox",
                 headers={"Authorization": f"Bearer {valid_api_key}"},
@@ -223,7 +221,9 @@ async def test_get_inbox_empty():
 @pytest.mark.asyncio
 async def test_get_inbox_missing_auth():
     """Test inbox retrieval without authentication."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.get("/events/inbox")
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -237,12 +237,12 @@ async def test_get_inbox_invalid_api_key():
     """Test inbox retrieval with invalid API key."""
     invalid_key = "invalid_key_123"
 
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify:
+    with patch("src.auth.dependencies.verify_key_against_all") as mock_verify:
         mock_verify.return_value = None
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.get(
                 "/events/inbox",
                 headers={"Authorization": f"Bearer {invalid_key}"},
@@ -252,24 +252,25 @@ async def test_get_inbox_invalid_api_key():
 
 
 @pytest.mark.asyncio
-async def test_get_inbox_rate_limit_exceeded(
-    valid_api_key, mock_api_key_model
-):
+async def test_get_inbox_rate_limit_exceeded(valid_api_key, mock_api_key_model):
     """Test inbox retrieval when rate limit is exceeded."""
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         # Setup mocks
         from src.exceptions import RateLimitError
+
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.side_effect = RateLimitError(
-            message="Rate limit exceeded",
-            retry_after=60
+            message="Rate limit exceeded", retry_after=60
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.get(
                 "/events/inbox",
                 headers={"Authorization": f"Bearer {valid_api_key}"},
@@ -286,13 +287,13 @@ async def test_get_inbox_limit_validation():
     """Test inbox limit parameter validation."""
     valid_api_key = "test_api_key_12345678901234567890123456789012"
 
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.services.event_service.EventRepository"
-    ) as mock_repo_class, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch("src.services.event_service.EventRepository") as mock_repo_class,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         # Setup mocks
         mock_api_key = ApiKey(
             key_id="test-key-id",
@@ -308,7 +309,9 @@ async def test_get_inbox_limit_validation():
         mock_repo.list_undelivered = AsyncMock(return_value=([], None))
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             # Test limit = 1 (minimum)
             response = await client.get(
                 "/events/inbox?limit=1",
@@ -341,13 +344,13 @@ async def test_get_inbox_limit_validation():
 @pytest.mark.asyncio
 async def test_get_inbox_invalid_cursor(valid_api_key, mock_api_key_model):
     """Test inbox with invalid cursor (should start from beginning)."""
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.services.event_service.EventRepository"
-    ) as mock_repo_class, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch("src.services.event_service.EventRepository") as mock_repo_class,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         # Setup mocks
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = True
@@ -356,7 +359,9 @@ async def test_get_inbox_invalid_cursor(valid_api_key, mock_api_key_model):
         mock_repo.list_undelivered = AsyncMock(return_value=([], None))
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.get(
                 "/events/inbox?cursor=invalid_cursor_data",
                 headers={"Authorization": f"Bearer {valid_api_key}"},

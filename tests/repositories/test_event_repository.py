@@ -1,6 +1,6 @@
 """Unit tests for EventRepository."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import uuid4
 
 import pytest
@@ -40,9 +40,7 @@ async def setup_dynamodb():
         import aioboto3
 
         session = aioboto3.Session()
-        async with session.resource(
-            "dynamodb", region_name="us-east-1"
-        ) as dynamodb:
+        async with session.resource("dynamodb", region_name="us-east-1") as dynamodb:
             # Create events table
             table = await dynamodb.create_table(
                 TableName="zapier-events",
@@ -112,9 +110,7 @@ async def test_get_by_id(
     event = Event(**event_data)
     await repository.create(event)
 
-    result = await repository.get_by_id(
-        event.event_id, event.timestamp
-    )
+    result = await repository.get_by_id(event.event_id, event.timestamp)
 
     assert result is not None
     assert result.event_id == event.event_id
@@ -122,13 +118,9 @@ async def test_get_by_id(
 
 
 @pytest.mark.asyncio
-async def test_get_by_id_not_found(
-    setup_dynamodb, repository: EventRepository
-) -> None:
+async def test_get_by_id_not_found(setup_dynamodb, repository: EventRepository) -> None:
     """Test retrieving non-existent event."""
-    result = await repository.get_by_id(
-        "nonexistent", "2025-01-01T00:00:00Z"
-    )
+    result = await repository.get_by_id("nonexistent", "2025-01-01T00:00:00Z")
 
     assert result is None
 
@@ -141,9 +133,7 @@ async def test_mark_delivered(
     event = Event(**event_data)
     await repository.create(event)
 
-    result = await repository.mark_delivered(
-        event.event_id, event.timestamp
-    )
+    result = await repository.mark_delivered(event.event_id, event.timestamp)
 
     assert result is not None
     assert result.delivered is True

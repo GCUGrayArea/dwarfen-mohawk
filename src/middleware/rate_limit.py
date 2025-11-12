@@ -2,7 +2,6 @@
 
 import time
 from collections import defaultdict
-from typing import Dict, Tuple
 
 from src.exceptions import RateLimitError
 
@@ -18,7 +17,7 @@ class RateLimiter:
     def __init__(self) -> None:
         """Initialize rate limiter with in-memory storage."""
         # key_id -> (request_count, window_start_time)
-        self._requests: Dict[str, Tuple[int, float]] = defaultdict(
+        self._requests: dict[str, tuple[int, float]] = defaultdict(
             lambda: (0, time.time())
         )
         self._window_seconds = 60  # 1 minute window
@@ -46,9 +45,7 @@ class RateLimiter:
         # Within current window
         if count >= limit:
             # Calculate retry_after
-            time_remaining = int(
-                self._window_seconds - (current_time - window_start)
-            )
+            time_remaining = int(self._window_seconds - (current_time - window_start))
             retry_after = max(1, time_remaining)
 
             raise RateLimitError(

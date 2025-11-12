@@ -1,8 +1,9 @@
 """Tests for GET /events/{event_id} endpoint."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.auth.dependencies import require_api_key
 from src.main import app
@@ -41,6 +42,7 @@ def mock_event_response():
 @pytest.mark.asyncio
 async def test_get_event_success(mock_api_key, mock_event_response):
     """Test successful event retrieval."""
+
     async def override_require_api_key():
         return mock_api_key
 
@@ -51,9 +53,7 @@ async def test_get_event_success(mock_api_key, mock_event_response):
 
     with patch("src.routes.events.EventService", return_value=mock_service):
         transport = ASGITransport(app=app)
-        async with AsyncClient(
-            transport=transport, base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get(
                 "/events/550e8400-e29b-41d4-a716-446655440000",
                 params={"timestamp": "2025-11-11T12:00:00Z"},
@@ -74,6 +74,7 @@ async def test_get_event_success(mock_api_key, mock_event_response):
 @pytest.mark.asyncio
 async def test_get_event_not_found(mock_api_key):
     """Test event not found returns 404."""
+
     async def override_require_api_key():
         return mock_api_key
 
@@ -84,9 +85,7 @@ async def test_get_event_not_found(mock_api_key):
 
     with patch("src.routes.events.EventService", return_value=mock_service):
         transport = ASGITransport(app=app)
-        async with AsyncClient(
-            transport=transport, base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get(
                 "/events/nonexistent-id",
                 params={"timestamp": "2025-11-11T12:00:00Z"},
@@ -106,9 +105,7 @@ async def test_get_event_not_found(mock_api_key):
 async def test_get_event_unauthorized():
     """Test GET without API key returns 401."""
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get(
             "/events/550e8400-e29b-41d4-a716-446655440000",
             params={"timestamp": "2025-11-11T12:00:00Z"},
@@ -123,15 +120,14 @@ async def test_get_event_unauthorized():
 @pytest.mark.asyncio
 async def test_get_event_missing_timestamp(mock_api_key):
     """Test GET without timestamp parameter returns 400."""
+
     async def override_require_api_key():
         return mock_api_key
 
     app.dependency_overrides[require_api_key] = override_require_api_key
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get(
             "/events/550e8400-e29b-41d4-a716-446655440000",
             headers={"Authorization": "Bearer test-key"},
@@ -166,9 +162,7 @@ async def test_get_event_delivered(mock_api_key):
 
     with patch("src.routes.events.EventService", return_value=mock_service):
         transport = ASGITransport(app=app)
-        async with AsyncClient(
-            transport=transport, base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get(
                 "/events/550e8400-e29b-41d4-a716-446655440000",
                 params={"timestamp": "2025-11-11T12:00:00Z"},

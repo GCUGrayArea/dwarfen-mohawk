@@ -1,6 +1,6 @@
 """Base repository class with common DynamoDB operations."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 import aioboto3
 from botocore.exceptions import ClientError
@@ -26,7 +26,7 @@ class BaseRepository:
         self.table_name = table_name
         self.session = aioboto3.Session()
 
-    async def put_item(self, item: Dict[str, Any]) -> None:
+    async def put_item(self, item: dict[str, Any]) -> None:
         """
         Put item into DynamoDB table.
 
@@ -43,9 +43,7 @@ class BaseRepository:
             table = await dynamodb.Table(self.table_name)
             await table.put_item(Item=item)
 
-    async def get_item(
-        self, key: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    async def get_item(self, key: dict[str, Any]) -> dict[str, Any] | None:
         """
         Get item from DynamoDB table by key.
 
@@ -69,7 +67,7 @@ class BaseRepository:
             except ClientError:
                 return None
 
-    async def delete_item(self, key: Dict[str, Any]) -> None:
+    async def delete_item(self, key: dict[str, Any]) -> None:
         """
         Delete item from DynamoDB table.
 
@@ -88,11 +86,11 @@ class BaseRepository:
 
     async def update_item(
         self,
-        key: Dict[str, Any],
+        key: dict[str, Any],
         update_expression: str,
-        expression_values: Dict[str, Any],
-        expression_names: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        expression_values: dict[str, Any],
+        expression_names: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """
         Update item in DynamoDB table.
 

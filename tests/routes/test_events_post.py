@@ -1,6 +1,6 @@
 """Integration tests for POST /events endpoint."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import status
@@ -9,7 +9,6 @@ from httpx import ASGITransport, AsyncClient
 from src.auth.api_key import hash_api_key
 from src.main import app
 from src.models.api_key import ApiKey
-from src.models.event import Event
 
 
 @pytest.fixture
@@ -46,13 +45,13 @@ async def test_create_event_success(
     valid_api_key, mock_api_key_model, valid_event_request
 ):
     """Test successful event creation."""
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.services.event_service.EventRepository"
-    ) as mock_repo_class, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch("src.services.event_service.EventRepository") as mock_repo_class,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         # Setup mocks
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = None
@@ -61,7 +60,9 @@ async def test_create_event_success(
         mock_repo.create = AsyncMock(return_value=None)
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.post(
                 "/events",
                 json=valid_event_request,
@@ -84,7 +85,9 @@ async def test_create_event_missing_auth():
         "payload": {"user_id": "123"},
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.post("/events", json=valid_event_request)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -104,7 +107,9 @@ async def test_create_event_invalid_api_key():
     with patch("src.auth.dependencies.verify_key_against_all") as mock_verify:
         mock_verify.return_value = None
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.post(
                 "/events",
                 json=valid_event_request,
@@ -120,9 +125,7 @@ async def test_create_event_invalid_api_key():
 @pytest.mark.asyncio
 async def test_create_event_revoked_key(valid_api_key, mock_api_key_model):
     """Test event creation with revoked API key."""
-    revoked_key = ApiKey(
-        **{**mock_api_key_model.model_dump(), "status": "revoked"}
-    )
+    revoked_key = ApiKey(**{**mock_api_key_model.model_dump(), "status": "revoked"})
 
     valid_event_request = {
         "event_type": "user.signup",
@@ -132,7 +135,9 @@ async def test_create_event_revoked_key(valid_api_key, mock_api_key_model):
     with patch("src.auth.dependencies.verify_key_against_all") as mock_verify:
         mock_verify.return_value = revoked_key
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.post(
                 "/events",
                 json=valid_event_request,
@@ -146,24 +151,25 @@ async def test_create_event_revoked_key(valid_api_key, mock_api_key_model):
 
 
 @pytest.mark.asyncio
-async def test_create_event_missing_required_field(
-    valid_api_key, mock_api_key_model
-):
+async def test_create_event_missing_required_field(valid_api_key, mock_api_key_model):
     """Test event creation with missing required field."""
     invalid_request = {
         "payload": {"user_id": "123"},
         # event_type is missing
     }
 
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = None
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.post(
                 "/events",
                 json=invalid_request,
@@ -178,24 +184,25 @@ async def test_create_event_missing_required_field(
 
 
 @pytest.mark.asyncio
-async def test_create_event_empty_event_type(
-    valid_api_key, mock_api_key_model
-):
+async def test_create_event_empty_event_type(valid_api_key, mock_api_key_model):
     """Test event creation with empty event_type."""
     invalid_request = {
         "event_type": "",
         "payload": {"user_id": "123"},
     }
 
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = None
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.post(
                 "/events",
                 json=invalid_request,
@@ -209,9 +216,7 @@ async def test_create_event_empty_event_type(
 
 
 @pytest.mark.asyncio
-async def test_create_event_oversized_payload(
-    valid_api_key, mock_api_key_model
-):
+async def test_create_event_oversized_payload(valid_api_key, mock_api_key_model):
     """Test event creation with oversized payload (> 256KB)."""
     # Create payload > 256KB
     large_data = "x" * (256 * 1024 + 1)
@@ -220,15 +225,18 @@ async def test_create_event_oversized_payload(
         "payload": {"data": large_data},
     }
 
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = None
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.post(
                 "/events",
                 json=oversized_request,
@@ -247,19 +255,21 @@ async def test_create_event_rate_limit_exceeded(
 ):
     """Test event creation when rate limit is exceeded."""
     from src.exceptions import RateLimitError
-    
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit:
+
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+    ):
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.side_effect = RateLimitError(
-            message="Rate limit exceeded",
-            retry_after=60
+            message="Rate limit exceeded", retry_after=60
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.post(
                 "/events",
                 json=valid_event_request,
@@ -278,26 +288,25 @@ async def test_create_event_duplicate_detection(
     valid_api_key, mock_api_key_model, valid_event_request
 ):
     """Test duplicate event detection returns same event ID."""
-    with patch(
-        "src.auth.dependencies.verify_key_against_all"
-    ) as mock_verify, patch(
-        "src.services.event_service.EventRepository"
-    ) as mock_repo_class, patch(
-        "src.middleware.rate_limit.rate_limiter.check_rate_limit"
-    ) as mock_rate_limit, patch(
-        "src.utils.deduplication.DeduplicationCache.check_and_add"
-    ) as mock_dedup:
+    with (
+        patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
+        patch("src.services.event_service.EventRepository") as mock_repo_class,
+        patch(
+            "src.middleware.rate_limit.rate_limiter.check_rate_limit"
+        ) as mock_rate_limit,
+        patch("src.utils.deduplication.DeduplicationCache.check_and_add") as mock_dedup,
+    ):
         # Setup mocks
         mock_verify.return_value = mock_api_key_model
         mock_rate_limit.return_value = None
-        mock_dedup.return_value = (
-            "existing-event-id-123"  # Duplicate detected
-        )
+        mock_dedup.return_value = "existing-event-id-123"  # Duplicate detected
 
         mock_repo = AsyncMock()
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             response = await client.post(
                 "/events",
                 json=valid_event_request,
@@ -317,7 +326,9 @@ async def test_create_event_duplicate_detection(
 @pytest.mark.asyncio
 async def test_create_event_malformed_json():
     """Test event creation with malformed JSON."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         response = await client.post(
             "/events",
             content="{ invalid json }",

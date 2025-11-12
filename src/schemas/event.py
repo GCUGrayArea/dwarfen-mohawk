@@ -1,6 +1,6 @@
 """Pydantic schemas for event API requests and responses."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -22,19 +22,13 @@ class CreateEventRequest(BaseModel):
         max_length=255,
         description="Event type (required, 1-255 chars)",
     )
-    payload: Dict[str, Any] = Field(
-        ..., description="Event payload (JSON, max 256KB)"
-    )
-    source: Optional[str] = Field(None, description="Event source")
-    metadata: Optional[Dict[str, Any]] = Field(
-        None, description="Additional metadata"
-    )
+    payload: dict[str, Any] = Field(..., description="Event payload (JSON, max 256KB)")
+    source: str | None = Field(None, description="Event source")
+    metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
 
     @field_validator("payload")
     @classmethod
-    def validate_payload_size(
-        cls, v: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def validate_payload_size(cls, v: dict[str, Any]) -> dict[str, Any]:
         """
         Validate payload size is under 256KB.
 
@@ -92,10 +86,10 @@ class EventResponse(BaseModel):
     event_id: str = Field(..., description="Event UUID")
     timestamp: str = Field(..., description="ISO 8601 timestamp")
     message: str = Field(..., description="Human-readable message")
-    event_type: Optional[str] = Field(None, description="Event type")
-    payload: Optional[Dict[str, Any]] = Field(None, description="Payload")
-    source: Optional[str] = Field(None, description="Event source")
-    delivered: Optional[bool] = Field(None, description="Delivered status")
+    event_type: str | None = Field(None, description="Event type")
+    payload: dict[str, Any] | None = Field(None, description="Payload")
+    source: str | None = Field(None, description="Event source")
+    delivered: bool | None = Field(None, description="Delivered status")
 
     class Config:
         """Pydantic configuration."""
@@ -124,9 +118,9 @@ class InboxEventItem(BaseModel):
 
     event_id: str = Field(..., description="Event UUID")
     event_type: str = Field(..., description="Event type")
-    payload: Dict[str, Any] = Field(..., description="Event payload")
+    payload: dict[str, Any] = Field(..., description="Event payload")
     timestamp: str = Field(..., description="ISO 8601 timestamp")
-    source: Optional[str] = Field(None, description="Event source")
+    source: str | None = Field(None, description="Event source")
 
 
 class PaginationMetadata(BaseModel):
@@ -139,13 +133,11 @@ class PaginationMetadata(BaseModel):
         total_undelivered: Total count of undelivered events
     """
 
-    next_cursor: Optional[str] = Field(
+    next_cursor: str | None = Field(
         None, description="Next page cursor (null if last page)"
     )
     has_more: bool = Field(..., description="More events available")
-    total_undelivered: int = Field(
-        ..., description="Total undelivered event count"
-    )
+    total_undelivered: int = Field(..., description="Total undelivered event count")
 
 
 class InboxResponse(BaseModel):
@@ -157,12 +149,8 @@ class InboxResponse(BaseModel):
         pagination: Pagination metadata
     """
 
-    events: List[InboxEventItem] = Field(
-        ..., description="List of undelivered events"
-    )
-    pagination: PaginationMetadata = Field(
-        ..., description="Pagination metadata"
-    )
+    events: list[InboxEventItem] = Field(..., description="List of undelivered events")
+    pagination: PaginationMetadata = Field(..., description="Pagination metadata")
 
     class Config:
         """Pydantic configuration."""

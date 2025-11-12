@@ -77,9 +77,7 @@ for access.
 
 # Register exception handlers
 app.add_exception_handler(TriggerAPIException, trigger_api_exception_handler)
-app.add_exception_handler(
-    RequestValidationError, validation_exception_handler
-)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # Register routers

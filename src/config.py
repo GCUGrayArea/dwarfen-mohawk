@@ -1,6 +1,5 @@
 """Configuration management using Pydantic Settings."""
 
-from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,11 +16,11 @@ class Settings(BaseSettings):
 
     # AWS Configuration
     aws_region: str = "us-east-1"
-    aws_access_key_id: Optional[str] = None
-    aws_secret_access_key: Optional[str] = None
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
 
     # DynamoDB Configuration
-    dynamodb_endpoint_url: Optional[str] = None
+    dynamodb_endpoint_url: str | None = None
     dynamodb_table_events: str = "zapier-events"
     dynamodb_table_api_keys: str = "zapier-api-keys"
 
@@ -29,9 +28,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     api_title: str = "Zapier Triggers API"
     api_version: str = "1.0.0"
-    api_description: str = (
-        "Event-driven automation REST API for Zapier platform"
-    )
+    api_description: str = "Event-driven automation REST API for Zapier platform"
 
     # Event Configuration
     event_ttl_days: int = 30

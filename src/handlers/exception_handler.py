@@ -1,14 +1,11 @@
 """Global exception handlers for consistent error responses."""
 
-import json
-import sys
 import traceback
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import ValidationError
 
 from src.exceptions import RateLimitError, TriggerAPIException
 
@@ -17,7 +14,7 @@ def create_error_response(
     error_code: str,
     message: str,
     status_code: int,
-    details: Dict[str, Any] = None,
+    details: dict[str, Any] = None,
 ) -> JSONResponse:
     """
     Create standardized error response.
@@ -105,9 +102,7 @@ async def validation_exception_handler(
     )
 
 
-async def request_too_large_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def request_too_large_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     Handle request body too large errors.
 
@@ -126,9 +121,7 @@ async def request_too_large_handler(
     )
 
 
-async def generic_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     Handle unexpected exceptions.
 

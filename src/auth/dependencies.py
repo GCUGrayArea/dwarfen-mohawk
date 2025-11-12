@@ -1,9 +1,8 @@
 """FastAPI dependencies for API key authentication."""
 
-from typing import Optional
 
 from fastapi import Header
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 from src.auth.api_key import verify_api_key
 from src.config import settings
@@ -15,7 +14,7 @@ security = HTTPBearer()
 
 
 async def get_api_key_from_header(
-    authorization: Optional[str] = Header(None),
+    authorization: str | None = Header(None),
 ) -> str:
     """
     Extract API key from Authorization header.
@@ -39,9 +38,7 @@ async def get_api_key_from_header(
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise UnauthorizedError(
             message="Invalid Authorization header format",
-            details={
-                "hint": "Use format 'Authorization: Bearer <api_key>'"
-            },
+            details={"hint": "Use format 'Authorization: Bearer <api_key>'"},
         )
 
     return parts[1]
@@ -49,7 +46,7 @@ async def get_api_key_from_header(
 
 async def verify_key_against_all(
     repo: ApiKeyRepository, api_key: str
-) -> Optional[ApiKey]:
+) -> ApiKey | None:
     """
     Scan all API keys and verify the provided key against each hash.
 

@@ -1,7 +1,6 @@
 """Event model for DynamoDB."""
 
-from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -25,22 +24,14 @@ class Event(BaseModel):
 
     event_id: str = Field(..., description="Unique event identifier (UUID)")
     timestamp: str = Field(..., description="ISO 8601 event timestamp")
-    event_type: str = Field(
-        ..., min_length=1, max_length=255, description="Event type"
-    )
-    payload: Dict[str, Any] = Field(..., description="Event payload (JSON)")
-    source: Optional[str] = Field(None, description="Event source")
-    metadata: Optional[Dict[str, Any]] = Field(
-        None, description="Additional metadata"
-    )
-    delivered: bool = Field(
-        default=False, description="Delivery status"
-    )
+    event_type: str = Field(..., min_length=1, max_length=255, description="Event type")
+    payload: dict[str, Any] = Field(..., description="Event payload (JSON)")
+    source: str | None = Field(None, description="Event source")
+    metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
+    delivered: bool = Field(default=False, description="Delivery status")
     created_at: str = Field(..., description="ISO 8601 creation timestamp")
     updated_at: str = Field(..., description="ISO 8601 update timestamp")
-    ttl: Optional[int] = Field(
-        None, description="Unix timestamp for TTL"
-    )
+    ttl: int | None = Field(None, description="Unix timestamp for TTL")
 
     class Config:
         """Pydantic configuration."""

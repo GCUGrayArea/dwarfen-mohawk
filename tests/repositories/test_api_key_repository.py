@@ -39,9 +39,7 @@ async def setup_dynamodb():
         import aioboto3
 
         session = aioboto3.Session()
-        async with session.resource(
-            "dynamodb", region_name="us-east-1"
-        ) as dynamodb:
+        async with session.resource("dynamodb", region_name="us-east-1") as dynamodb:
             # Create API keys table
             table = await dynamodb.create_table(
                 TableName="zapier-api-keys",

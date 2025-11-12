@@ -1,6 +1,6 @@
 """Custom exception classes for the Zapier Triggers API."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class TriggerAPIException(Exception):
@@ -11,7 +11,7 @@ class TriggerAPIException(Exception):
         message: str,
         status_code: int = 500,
         error_code: str = "INTERNAL_ERROR",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize exception.
@@ -35,7 +35,7 @@ class UnauthorizedError(TriggerAPIException):
     def __init__(
         self,
         message: str = "Unauthorized: Invalid or missing API key",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize UnauthorizedError.
@@ -58,7 +58,7 @@ class ForbiddenError(TriggerAPIException):
     def __init__(
         self,
         message: str = "Forbidden: Access denied",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize ForbiddenError.
@@ -82,7 +82,7 @@ class RateLimitError(TriggerAPIException):
         self,
         message: str = "Rate limit exceeded",
         retry_after: int = 60,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize RateLimitError.
@@ -109,8 +109,8 @@ class EventNotFoundError(TriggerAPIException):
     def __init__(
         self,
         message: str = "Event not found",
-        event_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        event_id: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize EventNotFoundError.

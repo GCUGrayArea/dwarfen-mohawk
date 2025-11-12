@@ -1,9 +1,6 @@
 """Event repository for DynamoDB operations."""
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
-
-import aioboto3
 
 from src.config import settings
 from src.models.event import Event
@@ -22,7 +19,7 @@ class EventRepository(BaseRepository):
         """Initialize EventRepository with events table."""
         super().__init__(settings.dynamodb_table_events)
 
-    def _deserialize_event(self, item: Dict) -> Event:
+    def _deserialize_event(self, item: dict) -> Event:
         """
         Convert DynamoDB item to Event model.
 
@@ -55,9 +52,7 @@ class EventRepository(BaseRepository):
         await self.put_item(item)
         return event
 
-    async def get_by_id(
-        self, event_id: str, timestamp: str
-    ) -> Optional[Event]:
+    async def get_by_id(self, event_id: str, timestamp: str) -> Event | None:
         """
         Get event by ID and timestamp.
 
@@ -76,8 +71,8 @@ class EventRepository(BaseRepository):
         return None
 
     async def list_undelivered(
-        self, limit: int = 50, last_evaluated_key: Optional[Dict] = None
-    ) -> tuple[List[Event], Optional[Dict]]:
+        self, limit: int = 50, last_evaluated_key: dict | None = None
+    ) -> tuple[list[Event], dict | None]:
         """
         List undelivered events using GSI.
 
@@ -111,16 +106,13 @@ class EventRepository(BaseRepository):
             response = await table.query(**query_params)
 
             events = [
-                self._deserialize_event(item)
-                for item in response.get("Items", [])
+                self._deserialize_event(item) for item in response.get("Items", [])
             ]
             next_key = response.get("LastEvaluatedKey")
 
             return events, next_key
 
-    async def mark_delivered(
-        self, event_id: str, timestamp: str
-    ) -> Optional[Event]:
+    async def mark_delivered(self, event_id: str, timestamp: str) -> Event | None:
         """
         Mark event as delivered.
 
@@ -133,29 +125,21 @@ class EventRepository(BaseRepository):
         """
         # Calculate TTL (30 days from now by default)
         ttl_days = settings.event_ttl_days
-        ttl_timestamp = int(
-            (datetime.utcnow() + timedelta(days=ttl_days)).timestamp()
-        )
+        ttl_timestamp = int((datetime.utcnow() + timedelta(days=ttl_days)).timestamp())
 
         key = {"event_id": event_id, "timestamp": timestamp}
         update_expr = (
-            "SET delivered = :delivered, "
-            "updated_at = :updated_at, "
-            "#ttl = :ttl"
+            "SET delivered = :delivered, " "updated_at = :updated_at, " "#ttl = :ttl"
         )
         expr_values = {
             ":delivered": 1,  # 1 for True
             ":updated_at": datetime.utcnow().isoformat() + "Z",
             ":ttl": ttl_timestamp,
         }
-        expr_names = {
-            "#ttl": "ttl"  # ttl is a reserved keyword in DynamoDB
-        }
+        expr_names = {"#ttl": "ttl"}  # ttl is a reserved keyword in DynamoDB
 
         try:
-            result = await self.update_item(
-                key, update_expr, expr_values, expr_names
-            )
+            result = await self.update_item(key, update_expr, expr_values, expr_names)
             return self._deserialize_event(result)
         except Exception:
             return None

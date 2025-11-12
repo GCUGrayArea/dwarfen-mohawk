@@ -10,9 +10,7 @@ pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 async def test_full_event_lifecycle(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """
     Test complete event lifecycle: POST → GET inbox → GET event → DELETE → verify.
@@ -30,16 +28,14 @@ async def test_full_event_lifecycle(
         "payload": {
             "user_id": "test-user-123",
             "email": "test@example.com",
-            "name": "Test User"
+            "name": "Test User",
         },
         "source": "integration-test",
-        "metadata": {"test": "lifecycle"}
+        "metadata": {"test": "lifecycle"},
     }
 
     create_response = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=auth_headers
+        "/events", json=event_data, headers=auth_headers
     )
 
     assert create_response.status_code == status.HTTP_200_OK
@@ -52,10 +48,7 @@ async def test_full_event_lifecycle(
     timestamp = create_data["timestamp"]
 
     # Step 2: Verify event appears in inbox
-    inbox_response = await api_client.get(
-        "/inbox",
-        headers=auth_headers
-    )
+    inbox_response = await api_client.get("/inbox", headers=auth_headers)
 
     assert inbox_response.status_code == status.HTTP_200_OK
     inbox_data = inbox_response.json()
@@ -69,9 +62,7 @@ async def test_full_event_lifecycle(
 
     # Step 3: Retrieve specific event by ID
     get_response = await api_client.get(
-        f"/events/{event_id}",
-        params={"timestamp": timestamp},
-        headers=auth_headers
+        f"/events/{event_id}", params={"timestamp": timestamp}, headers=auth_headers
     )
 
     assert get_response.status_code == status.HTTP_200_OK
@@ -83,18 +74,13 @@ async def test_full_event_lifecycle(
 
     # Step 4: Mark event as delivered (DELETE)
     delete_response = await api_client.delete(
-        f"/events/{event_id}",
-        params={"timestamp": timestamp},
-        headers=auth_headers
+        f"/events/{event_id}", params={"timestamp": timestamp}, headers=auth_headers
     )
 
     assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
     # Step 5: Verify event no longer appears in inbox
-    inbox_after_delete = await api_client.get(
-        "/inbox",
-        headers=auth_headers
-    )
+    inbox_after_delete = await api_client.get("/inbox", headers=auth_headers)
 
     assert inbox_after_delete.status_code == status.HTTP_200_OK
     inbox_after_data = inbox_after_delete.json()
@@ -102,9 +88,7 @@ async def test_full_event_lifecycle(
 
     # Step 6: Verify event still exists but marked as delivered
     get_after_delete = await api_client.get(
-        f"/events/{event_id}",
-        params={"timestamp": timestamp},
-        headers=auth_headers
+        f"/events/{event_id}", params={"timestamp": timestamp}, headers=auth_headers
     )
 
     assert get_after_delete.status_code == status.HTTP_200_OK
@@ -114,9 +98,7 @@ async def test_full_event_lifecycle(
 
 @pytest.mark.asyncio
 async def test_pagination_with_multiple_events(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """
     Test pagination with multiple events in inbox.
@@ -129,13 +111,11 @@ async def test_pagination_with_multiple_events(
         event_data = {
             "event_type": f"test.event.{i}",
             "payload": {"index": i, "test": "pagination"},
-            "source": "integration-test"
+            "source": "integration-test",
         }
 
         response = await api_client.post(
-            "/events",
-            json=event_data,
-            headers=auth_headers
+            "/events", json=event_data, headers=auth_headers
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -143,9 +123,7 @@ async def test_pagination_with_multiple_events(
 
     # Fetch first page (limit=5)
     page1_response = await api_client.get(
-        "/inbox",
-        params={"limit": 5},
-        headers=auth_headers
+        "/inbox", params={"limit": 5}, headers=auth_headers
     )
 
     assert page1_response.status_code == status.HTTP_200_OK
@@ -157,9 +135,7 @@ async def test_pagination_with_multiple_events(
     # Fetch second page using cursor
     cursor = page1_data["pagination"]["next_cursor"]
     page2_response = await api_client.get(
-        "/inbox",
-        params={"limit": 5, "cursor": cursor},
-        headers=auth_headers
+        "/inbox", params={"limit": 5, "cursor": cursor}, headers=auth_headers
     )
 
     assert page2_response.status_code == status.HTTP_200_OK
@@ -180,15 +156,10 @@ async def test_pagination_with_multiple_events(
 
 @pytest.mark.asyncio
 async def test_empty_inbox(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """Test that empty inbox returns empty array."""
-    response = await api_client.get(
-        "/inbox",
-        headers=auth_headers
-    )
+    response = await api_client.get("/inbox", headers=auth_headers)
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -199,21 +170,17 @@ async def test_empty_inbox(
 
 @pytest.mark.asyncio
 async def test_delete_idempotency(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """Test that DELETE is idempotent (returns 204 for already-delivered)."""
     # Create event
     event_data = {
         "event_type": "test.delete.idempotent",
-        "payload": {"test": "idempotency"}
+        "payload": {"test": "idempotency"},
     }
 
     create_response = await api_client.post(
-        "/events",
-        json=event_data,
-        headers=auth_headers
+        "/events", json=event_data, headers=auth_headers
     )
 
     event_id = create_response.json()["event_id"]
@@ -221,32 +188,26 @@ async def test_delete_idempotency(
 
     # Delete first time
     delete1 = await api_client.delete(
-        f"/events/{event_id}",
-        params={"timestamp": timestamp},
-        headers=auth_headers
+        f"/events/{event_id}", params={"timestamp": timestamp}, headers=auth_headers
     )
     assert delete1.status_code == status.HTTP_204_NO_CONTENT
 
     # Delete second time (should still return 204)
     delete2 = await api_client.delete(
-        f"/events/{event_id}",
-        params={"timestamp": timestamp},
-        headers=auth_headers
+        f"/events/{event_id}", params={"timestamp": timestamp}, headers=auth_headers
     )
     assert delete2.status_code == status.HTTP_204_NO_CONTENT
 
 
 @pytest.mark.asyncio
 async def test_get_nonexistent_event(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """Test that GET returns 404 for non-existent event."""
     response = await api_client.get(
         "/events/nonexistent-id-12345",
         params={"timestamp": "2025-11-11T00:00:00Z"},
-        headers=auth_headers
+        headers=auth_headers,
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -257,15 +218,13 @@ async def test_get_nonexistent_event(
 
 @pytest.mark.asyncio
 async def test_delete_nonexistent_event(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """Test that DELETE returns 404 for non-existent event."""
     response = await api_client.delete(
         "/events/nonexistent-id-12345",
         params={"timestamp": "2025-11-11T00:00:00Z"},
-        headers=auth_headers
+        headers=auth_headers,
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -276,15 +235,11 @@ async def test_delete_nonexistent_event(
 
 @pytest.mark.asyncio
 async def test_pagination_with_max_limit(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """Test that pagination respects maximum limit of 200."""
     response = await api_client.get(
-        "/inbox",
-        params={"limit": 250},  # Request more than max
-        headers=auth_headers
+        "/inbox", params={"limit": 250}, headers=auth_headers  # Request more than max
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -295,15 +250,11 @@ async def test_pagination_with_max_limit(
 
 @pytest.mark.asyncio
 async def test_pagination_with_invalid_cursor(
-    api_client: AsyncClient,
-    auth_headers: dict[str, str],
-    dynamodb_tables
+    api_client: AsyncClient, auth_headers: dict[str, str], dynamodb_tables
 ):
     """Test that invalid cursor returns 400 error."""
     response = await api_client.get(
-        "/inbox",
-        params={"cursor": "invalid_cursor_string"},
-        headers=auth_headers
+        "/inbox", params={"cursor": "invalid_cursor_string"}, headers=auth_headers
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -1,8 +1,6 @@
 """API Key repository for DynamoDB operations."""
 
-from typing import Optional
 
-import aioboto3
 
 from src.config import settings
 from src.models.api_key import ApiKey
@@ -20,7 +18,7 @@ class ApiKeyRepository(BaseRepository):
         """Initialize ApiKeyRepository with api_keys table."""
         super().__init__(settings.dynamodb_table_api_keys)
 
-    async def get_by_id(self, key_id: str) -> Optional[ApiKey]:
+    async def get_by_id(self, key_id: str) -> ApiKey | None:
         """
         Get API key by ID.
 
@@ -37,7 +35,7 @@ class ApiKeyRepository(BaseRepository):
             return ApiKey(**item)
         return None
 
-    async def get_by_key_hash(self, key_hash: str) -> Optional[ApiKey]:
+    async def get_by_key_hash(self, key_hash: str) -> ApiKey | None:
         """
         Get API key by hash using scan.
 

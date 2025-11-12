@@ -28,9 +28,7 @@ def mock_dedup_cache():
 @pytest.fixture
 def event_service(mock_repository, mock_dedup_cache):
     """Create EventService with mocked dependencies."""
-    return EventService(
-        repository=mock_repository, dedup_cache=mock_dedup_cache
-    )
+    return EventService(repository=mock_repository, dedup_cache=mock_dedup_cache)
 
 
 @pytest.mark.asyncio
@@ -42,17 +40,12 @@ async def test_ingest_new_event(event_service, mock_repository):
         source="web-app",
     )
 
-    with patch(
-        "src.services.event_service.uuid.uuid4"
-    ) as mock_uuid, patch(
-        "src.services.event_service.datetime"
-    ) as mock_datetime:
-        mock_uuid.return_value = Mock(
-            __str__=Mock(return_value="test-uuid-123")
-        )
-        mock_datetime.utcnow.return_value.isoformat.return_value = (
-            "2025-11-11T12:00:00"
-        )
+    with (
+        patch("src.services.event_service.uuid.uuid4") as mock_uuid,
+        patch("src.services.event_service.datetime") as mock_datetime,
+    ):
+        mock_uuid.return_value = Mock(__str__=Mock(return_value="test-uuid-123"))
+        mock_datetime.utcnow.return_value.isoformat.return_value = "2025-11-11T12:00:00"
 
         response = await event_service.ingest(request)
 
@@ -70,9 +63,7 @@ async def test_ingest_new_event(event_service, mock_repository):
 
 
 @pytest.mark.asyncio
-async def test_ingest_duplicate_event(
-    event_service, mock_repository, mock_dedup_cache
-):
+async def test_ingest_duplicate_event(event_service, mock_repository, mock_dedup_cache):
     """Test ingesting a duplicate event."""
     request = CreateEventRequest(
         event_type="user.signup",
@@ -131,9 +122,7 @@ async def test_get_existing_event(event_service, mock_repository):
     )
     mock_repository.get_by_id.return_value = mock_event
 
-    response = await event_service.get(
-        "event-123", "2025-11-11T12:00:00Z"
-    )
+    response = await event_service.get("event-123", "2025-11-11T12:00:00Z")
 
     assert response is not None
     assert response.status == "success"
@@ -152,17 +141,13 @@ async def test_get_nonexistent_event(event_service, mock_repository):
     """Test retrieving non-existent event returns None."""
     mock_repository.get_by_id.return_value = None
 
-    response = await event_service.get(
-        "nonexistent", "2025-11-11T12:00:00Z"
-    )
+    response = await event_service.get("nonexistent", "2025-11-11T12:00:00Z")
 
     assert response is None
 
 
 @pytest.mark.asyncio
-async def test_list_inbox_default_params(
-    event_service, mock_repository
-):
+async def test_list_inbox_default_params(event_service, mock_repository):
     """Test listing inbox with default parameters."""
     mock_events = [
         Event(
@@ -195,9 +180,7 @@ async def test_list_inbox_default_params(
 
 
 @pytest.mark.asyncio
-async def test_list_inbox_with_pagination(
-    event_service, mock_repository
-):
+async def test_list_inbox_with_pagination(event_service, mock_repository):
     """Test listing inbox with pagination cursor."""
     mock_events = [
         Event(
@@ -268,9 +251,7 @@ async def test_list_inbox_with_cursor(event_service, mock_repository):
 
 
 @pytest.mark.asyncio
-async def test_list_inbox_invalid_cursor(
-    event_service, mock_repository
-):
+async def test_list_inbox_invalid_cursor(event_service, mock_repository):
     """Test invalid cursor is handled gracefully."""
     mock_repository.list_undelivered.return_value = ([], None)
 
@@ -299,9 +280,7 @@ async def test_mark_delivered_success(event_service, mock_repository):
     )
     mock_repository.mark_delivered.return_value = mock_event
 
-    result = await event_service.mark_delivered(
-        "event-123", "2025-11-11T12:00:00Z"
-    )
+    result = await event_service.mark_delivered("event-123", "2025-11-11T12:00:00Z")
 
     assert result is True
     mock_repository.mark_delivered.assert_called_once_with(
@@ -310,14 +289,10 @@ async def test_mark_delivered_success(event_service, mock_repository):
 
 
 @pytest.mark.asyncio
-async def test_mark_delivered_not_found(
-    event_service, mock_repository
-):
+async def test_mark_delivered_not_found(event_service, mock_repository):
     """Test marking non-existent event returns False."""
     mock_repository.mark_delivered.return_value = None
 
-    result = await event_service.mark_delivered(
-        "nonexistent", "2025-11-11T12:00:00Z"
-    )
+    result = await event_service.mark_delivered("nonexistent", "2025-11-11T12:00:00Z")
 
     assert result is False

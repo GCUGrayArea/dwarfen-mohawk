@@ -8,8 +8,6 @@ Suitable for single-instance deployments or MVP.
 import hashlib
 import json
 import time
-from datetime import datetime, timedelta
-from typing import Dict, Optional
 
 
 class DeduplicationCache:
@@ -28,11 +26,9 @@ class DeduplicationCache:
             window_seconds: Deduplication time window (default: 300 = 5min)
         """
         self.window_seconds = window_seconds
-        self._cache: Dict[str, tuple[str, float]] = {}
+        self._cache: dict[str, tuple[str, float]] = {}
 
-    def _generate_fingerprint(
-        self, event_type: str, payload: Dict
-    ) -> str:
+    def _generate_fingerprint(self, event_type: str, payload: dict) -> str:
         """
         Generate unique fingerprint for event.
 
@@ -52,17 +48,13 @@ class DeduplicationCache:
     def _cleanup_expired(self) -> None:
         """Remove expired entries from cache."""
         now = time.time()
-        expired_keys = [
-            key
-            for key, (_, expiry) in self._cache.items()
-            if expiry < now
-        ]
+        expired_keys = [key for key, (_, expiry) in self._cache.items() if expiry < now]
         for key in expired_keys:
             del self._cache[key]
 
     def check_and_add(
-        self, event_type: str, payload: Dict, event_id: str
-    ) -> Optional[str]:
+        self, event_type: str, payload: dict, event_id: str
+    ) -> str | None:
         """
         Check if event is duplicate and add to cache.
 

@@ -1,13 +1,9 @@
 """API routes for event operations."""
 
-from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, Query, Request, status
-from fastapi.responses import JSONResponse
 
 from src.auth.dependencies import require_api_key
-from src.config import settings
-from src.exceptions import RateLimitError, TriggerAPIException
 from src.middleware.rate_limit import rate_limiter
 from src.models.api_key import ApiKey
 from src.schemas.event import (
@@ -223,7 +219,7 @@ async def get_inbox(
         le=200,
         description="Maximum number of events to return (1-200)",
     ),
-    cursor: Optional[str] = Query(
+    cursor: str | None = Query(
         default=None,
         description="Pagination cursor from previous response",
     ),
