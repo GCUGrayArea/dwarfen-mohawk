@@ -1,0 +1,26 @@
+# Lambda-specific dependencies (production only, no dev tools)
+# This file is used to build the Lambda deployment package
+# It includes only the runtime dependencies needed by the application
+
+# Web framework
+fastapi>=0.109.0
+mangum>=0.17.0
+
+# Data validation
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# AWS SDK (boto3 is included in Lambda runtime, but we specify for completeness)
+# aioboto3 includes boto3, so we only need to install aioboto3
+aioboto3>=12.3.0
+
+# Authentication and security
+bcrypt>=4.1.0
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.6
+
+# Note: The following are NOT needed in Lambda:
+# - uvicorn (Lambda uses custom runtime)
+# - pytest and testing tools (tests run locally)
+# - black, ruff, mypy (code quality tools run in CI/CD)
+# - locust (performance testing runs separately)

@@ -382,6 +382,30 @@ To run the management scripts inside the Docker container:
 docker-compose exec api python -m scripts.manage_api_keys list
 ```
 
+## AWS Deployment
+
+This application is deployment-ready for AWS Lambda + API Gateway + DynamoDB.
+
+For complete deployment instructions, see **[docs/deployment.md](docs/deployment.md)**.
+
+The deployment guide covers:
+- Building Lambda deployment packages
+- Creating DynamoDB tables with CloudFormation
+- Deploying Lambda functions and API Gateway
+- Post-deployment testing and verification
+- Monitoring with CloudWatch Logs
+- Troubleshooting common issues
+- Update and rollback procedures
+
+**Quick Summary:**
+
+1. Build Lambda package: `pip install -r requirements-lambda.txt -t build/lambda`
+2. Deploy DynamoDB stack: `aws cloudformation create-stack --template-body file://infrastructure/cloudformation/dynamodb.yaml`
+3. Deploy API stack: `aws cloudformation create-stack --template-body file://infrastructure/cloudformation/api.yaml`
+4. Test deployment: `curl https://API_URL/status`
+
+See [docs/deployment.md](docs/deployment.md) for detailed step-by-step instructions.
+
 ## Coding Standards
 
 This project enforces strict coding standards:

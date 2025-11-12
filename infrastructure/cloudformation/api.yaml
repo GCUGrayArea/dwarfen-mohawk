@@ -1,0 +1,250 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'API Gateway and Lambda function for Zapier Triggers API'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: production
+    Description: Environment name (development, staging, production)
+    AllowedValues:
+      - development
+      - staging
+      - production
+
+  DynamoDBStackName:
+    Type: String
+    Description: Name of the CloudFormation stack that created DynamoDB tables
+
+  LambdaMemorySize:
+    Type: Number
+    Default: 512
+    Description: Memory allocated to Lambda function (MB)
+    MinValue: 128
+    MaxValue: 10240
+
+  LambdaTimeout:
+    Type: Number
+    Default: 30
+    Description: Lambda function timeout (seconds)
+    MinValue: 1
+    MaxValue: 900
+
+  ApiStageName:
+    Type: String
+    Default: v1
+    Description: API Gateway stage name
+
+  LogLevel:
+    Type: String
+    Default: INFO
+    Description: Application log level
+    AllowedValues:
+      - DEBUG
+      - INFO
+      - WARNING
+      - ERROR
+
+Resources:
+  # Lambda Execution Role
+  # Grants Lambda function permissions to access DynamoDB and CloudWatch Logs
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'zapier-triggers-lambda-role-${EnvironmentName}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - Fn::ImportValue: !Sub '${DynamoDBStackName}-EventsTableArn'
+                  - Fn::ImportValue: !Sub '${DynamoDBStackName}-ApiKeysTableArn'
+                  - !Sub
+                    - '${TableArn}/index/*'
+                    - TableArn:
+                        Fn::ImportValue: !Sub '${DynamoDBStackName}-EventsTableArn'
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Application
+          Value: zapier-triggers-api
+
+  # Lambda Function
+  # Runs the FastAPI application via Mangum adapter
+  ApiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'zapier-triggers-api-${EnvironmentName}'
+      Runtime: python3.11
+      Handler: src.lambda_handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      MemorySize: !Ref LambdaMemorySize
+      Timeout: !Ref LambdaTimeout
+      Environment:
+        Variables:
+          AWS_REGION: !Ref AWS::Region
+          DYNAMODB_TABLE_EVENTS:
+            Fn::ImportValue: !Sub '${DynamoDBStackName}-EventsTableName'
+          DYNAMODB_TABLE_API_KEYS:
+            Fn::ImportValue: !Sub '${DynamoDBStackName}-ApiKeysTableName'
+          LOG_LEVEL: !Ref LogLevel
+          API_TITLE: Zapier Triggers API
+          API_VERSION: '1.0.0'
+          EVENT_TTL_DAYS: '30'
+          DEDUPLICATION_WINDOW_SECONDS: '300'
+          MAX_REQUEST_SIZE_BYTES: '524288'
+          MAX_PAYLOAD_SIZE_BYTES: '262144'
+          MAX_EVENT_TYPE_LENGTH: '255'
+          DEFAULT_INBOX_LIMIT: '50'
+          MAX_INBOX_LIMIT: '200'
+          DEFAULT_RATE_LIMIT_PER_MINUTE: '100'
+      Code:
+        # Note: Code must be uploaded separately via deployment process
+        # This is a placeholder - actual deployment uses S3 bucket or inline zip
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {
+                  'statusCode': 503,
+                  'body': 'Function code not deployed yet'
+              }
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Application
+          Value: zapier-triggers-api
+
+  # Lambda Log Group
+  # Explicit creation allows setting retention period
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ApiFunction}'
+      RetentionInDays: 30
+
+  # API Gateway HTTP API
+  # Provides HTTP endpoint for Lambda function
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub 'zapier-triggers-api-${EnvironmentName}'
+      Description: HTTP API for Zapier Triggers
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Request-ID
+        MaxAge: 300
+      Tags:
+        Environment: !Ref EnvironmentName
+        Application: zapier-triggers-api
+
+  # API Gateway Integration
+  # Connects API Gateway to Lambda function
+  ApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations'
+      PayloadFormatVersion: '2.0'
+      TimeoutInMillis: 30000
+
+  # API Gateway Route - Catch All
+  # Routes all requests to Lambda function
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: '$default'
+      Target: !Sub 'integrations/${ApiIntegration}'
+
+  # API Gateway Stage
+  # Deployment stage with logging
+  ApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      StageName: !Ref ApiStageName
+      AutoDeploy: true
+      AccessLogSettings:
+        DestinationArn: !GetAtt ApiAccessLogGroup.Arn
+        Format: >
+          {"requestId":"$context.requestId",
+          "ip":"$context.identity.sourceIp",
+          "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod",
+          "routeKey":"$context.routeKey",
+          "status":"$context.status",
+          "protocol":"$context.protocol",
+          "responseLength":"$context.responseLength",
+          "integrationLatency":"$context.integrationLatency"}
+      Tags:
+        Environment: !Ref EnvironmentName
+        Application: zapier-triggers-api
+
+  # API Gateway Access Logs
+  ApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/apigateway/zapier-triggers-${EnvironmentName}'
+      RetentionInDays: 30
+
+  # Lambda Invoke Permission
+  # Allows API Gateway to invoke Lambda function
+  ApiInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ApiFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*'
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiUrl'
+
+  ApiFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt ApiFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionArn'
+
+  ApiFunctionName:
+    Description: Lambda function name
+    Value: !Ref ApiFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionName'
+
+  HttpApiId:
+    Description: HTTP API Gateway ID
+    Value: !Ref HttpApi
+    Export:
+      Name: !Sub '${AWS::StackName}-HttpApiId'

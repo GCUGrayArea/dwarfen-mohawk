@@ -1,0 +1,126 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'DynamoDB tables for Zapier Triggers API'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: production
+    Description: Environment name (development, staging, production)
+    AllowedValues:
+      - development
+      - staging
+      - production
+
+  EventsTableName:
+    Type: String
+    Default: zapier-events
+    Description: Name of the Events DynamoDB table
+
+  ApiKeysTableName:
+    Type: String
+    Default: zapier-api-keys
+    Description: Name of the API Keys DynamoDB table
+
+  EventTTLDays:
+    Type: Number
+    Default: 30
+    Description: TTL in days for delivered events (auto-deletion)
+    MinValue: 1
+    MaxValue: 3650
+
+Resources:
+  # Events Table
+  # Stores all ingested events with metadata
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${EventsTableName}-${EnvironmentName}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: event_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+        - AttributeName: delivered
+          AttributeType: N
+      KeySchema:
+        - AttributeName: event_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        # Index for querying undelivered events (inbox)
+        - IndexName: DeliveredIndex
+          KeySchema:
+            - AttributeName: delivered
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        Enabled: true
+        AttributeName: ttl
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Application
+          Value: zapier-triggers-api
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  # API Keys Table
+  # Stores API keys with hashed values and rate limit settings
+  ApiKeysTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ApiKeysTableName}-${EnvironmentName}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: key_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: key_id
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Application
+          Value: zapier-triggers-api
+        - Key: ManagedBy
+          Value: CloudFormation
+
+Outputs:
+  EventsTableName:
+    Description: Name of the Events DynamoDB table
+    Value: !Ref EventsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-EventsTableName'
+
+  EventsTableArn:
+    Description: ARN of the Events DynamoDB table
+    Value: !GetAtt EventsTable.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-EventsTableArn'
+
+  ApiKeysTableName:
+    Description: Name of the API Keys DynamoDB table
+    Value: !Ref ApiKeysTable
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiKeysTableName'
+
+  ApiKeysTableArn:
+    Description: ARN of the API Keys DynamoDB table
+    Value: !GetAtt ApiKeysTable.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiKeysTableArn'
