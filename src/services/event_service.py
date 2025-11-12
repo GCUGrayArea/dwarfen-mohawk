@@ -1,7 +1,9 @@
 """Event service layer with business logic for event operations."""
 
+import json
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 from src.config import settings
 from src.models.event import Event
@@ -14,6 +16,24 @@ from src.schemas.event import (
     PaginationMetadata,
 )
 from src.utils.deduplication import DeduplicationCache
+
+
+def decimal_to_number(obj):
+    """
+    Convert Decimal to int or float for JSON serialization.
+
+    DynamoDB returns numeric values as Decimal objects which are not
+    JSON serializable by default.
+
+    Args:
+        obj: Object to convert (if Decimal)
+
+    Returns:
+        int or float if obj is Decimal, raises TypeError otherwise
+    """
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 
 class EventService:
@@ -148,8 +168,6 @@ class EventService:
             # For MVP, cursor is just the last_evaluated_key dict
             # In production, would base64 encode/decode
             try:
-                import json
-
                 last_evaluated_key = json.loads(cursor)
             except Exception:
                 # Invalid cursor, start from beginning
@@ -172,12 +190,10 @@ class EventService:
             for event in events
         ]
 
-        # Encode next cursor
+        # Encode next cursor (with Decimal handling for DynamoDB)
         next_cursor = None
         if next_key:
-            import json
-
-            next_cursor = json.dumps(next_key)
+            next_cursor = json.dumps(next_key, default=decimal_to_number)
 
         # Get total count (simplified - just check if more results)
         # In production, might query GSI for count or cache this value
