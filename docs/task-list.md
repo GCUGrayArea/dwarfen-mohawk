@@ -914,3 +914,53 @@ Create a web-based demo UI to showcase the Zapier Triggers API functionality. Th
   - Self-documenting with helpful placeholder text and instructions
 
 **Estimated Time:** 60-90 minutes
+
+### PR-020: Fix Event Creation Response Fields
+**Status:** New
+**Dependencies:** PR-005 (POST /events)
+**Priority:** High
+
+**Description:**
+Fix the POST /events endpoint response to include all event fields (event_type, payload, source, delivered) instead of returning null values. This is a backend bug where the EventResponse is created with only minimal fields.
+
+**Files to Modify:**
+- src/services/event_service.py - Update EventResponse creation in ingest() method to include all fields
+
+**Current Behavior:**
+```json
+{
+  "status": "accepted",
+  "event_id": "7a5c37da-c8b3-4566-b94d-6f9f19e6c548",
+  "timestamp": "2025-11-12T14:24:51.312336Z",
+  "message": "Event successfully ingested",
+  "event_type": null,
+  "payload": null,
+  "source": null,
+  "delivered": null
+}
+```
+
+**Expected Behavior:**
+```json
+{
+  "status": "accepted",
+  "event_id": "7a5c37da-c8b3-4566-b94d-6f9f19e6c548",
+  "timestamp": "2025-11-12T14:24:51.312336Z",
+  "message": "Event successfully ingested",
+  "event_type": "order.created",
+  "payload": {"order_id": "123"},
+  "source": "web-app",
+  "delivered": false
+}
+```
+
+**Acceptance Criteria:**
+- [ ] POST /events returns complete event data including event_type, payload, source, delivered
+- [ ] Response matches EventResponse schema definition
+- [ ] All existing tests still pass
+- [ ] Code follows standards (functions < 75 lines)
+
+**Notes:**
+This is a pre-existing bug from PR-005. The event is stored correctly in DynamoDB (inbox shows all fields), but the creation response omits most fields. Simple fix: pass all fields to EventResponse constructor.
+
+**Estimated Time:** 15-20 minutes
