@@ -416,6 +416,16 @@ This project enforces strict coding standards:
 - **Test Coverage**: 80%+ overall coverage target
 - **Code Style**: Enforced via black (formatting), ruff (linting), mypy (type checking)
 
+## Documentation
+
+For detailed technical documentation:
+
+- **[Architecture Guide](docs/architecture.md)** - Complete system architecture, design patterns, and deployment details
+- **[Deployment Guide](docs/deployment.md)** - Step-by-step AWS deployment instructions
+- **[Performance Analysis](docs/performance.md)** - Bottleneck analysis and optimization recommendations
+- **[Product Requirements](docs/prd.md)** - Business requirements and acceptance criteria
+- **[Task List](docs/task-list.md)** - Implementation history and PR tracking
+
 ## Contributing
 
 1. Read `docs/prd.md` for product requirements
