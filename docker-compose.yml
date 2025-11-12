@@ -43,6 +43,7 @@ services:
       - ./tests:/app/tests
       - ./infrastructure:/app/infrastructure
       - ./scripts:/app/scripts
+      - ./static:/app/static
     depends_on:
       localstack:
         condition: service_healthy

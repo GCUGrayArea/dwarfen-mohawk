@@ -1,8 +1,8 @@
 """FastAPI application entry point."""
-# type: ignore[arg-type]  # FastAPI exception handler types are generic
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
 
 from src.config import settings
 from src.exceptions import TriggerAPIError
@@ -95,6 +95,9 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # Register routers
 app.include_router(events.router)
 app.include_router(status.router)
+
+# Mount static files for demo UI
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", tags=["Root"])

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zapier Triggers API - Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Zapier Triggers API</h1>
+            <p class="subtitle">Interactive Demo Interface</p>
+        </header>
+
+        <!-- API Key Configuration -->
+        <section class="card api-key-section">
+            <h2>API Configuration</h2>
+            <div class="form-group">
+                <label for="api-key">API Key:</label>
+                <input
+                    type="password"
+                    id="api-key"
+                    placeholder="Enter your API key"
+                    autocomplete="off"
+                >
+                <button id="save-key-btn" class="btn btn-primary">Save Key</button>
+                <button id="clear-key-btn" class="btn btn-secondary">Clear</button>
+            </div>
+            <div id="key-status" class="status-message"></div>
+            <p class="help-text">
+                Need an API key? Use the CLI:
+                <code>python scripts/manage_api_keys.py create &lt;user_email&gt; &lt;role&gt;</code>
+            </p>
+        </section>
+
+        <!-- Event Creation Form -->
+        <section class="card">
+            <h2>Create Event</h2>
+            <form id="create-event-form">
+                <div class="form-group">
+                    <label for="event-type">Event Type: <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        id="event-type"
+                        placeholder="e.g., order.created"
+                        required
+                        maxlength="255"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="event-payload">Payload (JSON): <span class="required">*</span></label>
+                    <textarea
+                        id="event-payload"
+                        rows="6"
+                        placeholder='{"key": "value"}'
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="event-source">Source (Optional):</label>
+                    <input
+                        type="text"
+                        id="event-source"
+                        placeholder="e.g., web-app"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary">Send Event</button>
+            </form>
+
+            <div id="create-result" class="result-box"></div>
+        </section>
+
+        <!-- Inbox View -->
+        <section class="card">
+            <div class="section-header">
+                <h2>Event Inbox</h2>
+                <div class="controls">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="auto-refresh" checked>
+                        Auto-refresh (5s)
+                    </label>
+                    <button id="refresh-inbox-btn" class="btn btn-secondary">Refresh Now</button>
+                </div>
+            </div>
+
+            <div id="inbox-stats" class="stats-bar"></div>
+            <div id="inbox-loading" class="loading-message">Loading inbox...</div>
+            <div id="inbox-error" class="error-message"></div>
+
+            <div id="inbox-list" class="inbox-list"></div>
+
+            <div class="pagination-controls" id="pagination-controls">
+                <button id="prev-page-btn" class="btn btn-secondary" disabled>Previous</button>
+                <span id="page-info"></span>
+                <button id="next-page-btn" class="btn btn-secondary" disabled>Next</button>
+            </div>
+        </section>
+
+        <!-- Event Details Modal -->
+        <div id="event-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Event Details</h2>
+                    <button class="close-btn" id="close-modal-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="event-details"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="acknowledge-btn" class="btn btn-danger">Acknowledge Event</button>
+                    <button id="cancel-btn" class="btn btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

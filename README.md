@@ -184,6 +184,58 @@ pre-commit run --all-files
 - **Swagger UI**: http://localhost:8000/docs - Try out API endpoints interactively
 - **ReDoc**: http://localhost:8000/redoc - Clean, searchable API reference
 
+## Demo UI
+
+A web-based demo interface is available for interactive testing and demonstrations. This provides a visual way to interact with the Triggers API without command-line tools or code.
+
+### Access the Demo
+
+Visit **http://localhost:8000/static/index.html** when the application is running.
+
+### Features
+
+The demo UI provides:
+
+1. **API Key Configuration**: Save and manage your API key (stored in browser localStorage)
+2. **Event Creation**: Interactive form to create events with JSON payload validation
+3. **Live Inbox View**: Auto-refreshing list of undelivered events (updates every 5 seconds)
+4. **Event Details**: Click any event to view complete details in a modal
+5. **Event Acknowledgment**: Mark events as delivered with a single click
+6. **Pagination**: Navigate through large event lists with cursor-based pagination
+7. **Responsive Design**: Works on desktop, tablet, and mobile devices
+
+### Getting Started with the Demo
+
+1. Start the application: `docker-compose up`
+2. Generate an API key:
+   ```bash
+   docker-compose exec api python -m scripts.manage_api_keys create user@example.com creator
+   ```
+3. Copy the generated API key
+4. Open http://localhost:8000/static/index.html in your browser
+5. Enter the API key in the configuration section and click "Save Key"
+6. Start creating and managing events through the interface
+
+### Demo UI Architecture
+
+The demo is built with vanilla JavaScript (no build step required):
+
+- **HTML/CSS/JavaScript**: Pure vanilla implementation for maximum portability
+- **No Framework Dependencies**: Self-contained single-page application
+- **LocalStorage**: API key persistence in the browser
+- **Fetch API**: Modern async HTTP requests to the API endpoints
+- **Responsive CSS**: Mobile-first design with flexbox/grid
+
+### Use Cases
+
+The demo UI is perfect for:
+
+- **Live Demonstrations**: Showcase the API to stakeholders without coding
+- **Quick Testing**: Manually verify event creation and delivery workflows
+- **Training**: Teach team members how the event lifecycle works
+- **Debugging**: Visualize event data and troubleshoot issues interactively
+- **Presentations**: Professional interface for product demos
+
 ## API Usage Examples
 
 ### Authentication
