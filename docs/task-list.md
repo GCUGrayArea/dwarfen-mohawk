@@ -805,3 +805,82 @@ Comprehensive quality review completed. All linters configured and passing. Code
 - All PRs must have 80%+ test coverage (verified per PR)
 - All PRs must follow size limits (functions < 75 lines, files < 750 lines)
 - Final review in PR-018 ensures overall quality
+
+---
+
+## Block 10: Demo UI (Post-MVP Enhancement)
+
+### PR-019: Web-Based Demo UI
+**Status:** New
+**Dependencies:** PR-001 (FastAPI setup), PR-005 (POST /events), PR-006 (GET /inbox), PR-007 (GET/DELETE events)
+**Priority:** Medium
+
+**Description:**
+Create a web-based demo UI to showcase the Zapier Triggers API functionality. This will provide a visual, interactive way to demonstrate event creation, inbox polling, and event acknowledgment without requiring API knowledge or command-line tools.
+
+**Files (ESTIMATED):**
+- static/ (create directory)
+- static/index.html (create) - Single-page demo application
+- static/style.css (create) - Styling for demo UI
+- static/app.js (create) - JavaScript for API interaction
+- src/main.py (modify) - Mount static files directory
+- README.md (modify) - Add Demo UI section
+
+**Features to Implement:**
+
+1. **Event Creation Form**
+   - Input fields for event_type, payload (JSON editor), source, metadata
+   - "Send Event" button
+   - Display created event_id and timestamp
+   - Success/error feedback
+
+2. **Inbox View**
+   - Auto-refresh inbox every 5 seconds
+   - Display undelivered events in a list/table
+   - Show event_type, timestamp, payload preview
+   - Pagination controls (previous/next page)
+   - Total undelivered count
+
+3. **Event Details**
+   - Click event to view full details
+   - Show complete event data (formatted JSON)
+   - "Acknowledge" button to mark as delivered
+   - Success feedback when acknowledged
+
+4. **API Key Configuration**
+   - Input field for API key (stored in localStorage)
+   - Instructions for generating API key
+   - Clear feedback if API key is invalid/missing
+
+5. **Visual Design**
+   - Clean, modern interface (no Tailwind - use vanilla CSS or simple framework)
+   - Responsive layout (works on mobile/tablet/desktop)
+   - Event lifecycle visualization (optional but nice to have)
+   - Loading states and error messages
+   - Color coding for event status
+
+**Technical Approach:**
+- **No build step**: Use vanilla JavaScript or CDN-loaded library (e.g., Vue.js from CDN, Alpine.js)
+- **Static files**: Served by FastAPI's StaticFiles middleware
+- **API calls**: Fetch API with proper Authorization headers
+- **Persistence**: localStorage for API key, no backend state needed
+- **Auto-refresh**: setInterval for inbox polling (configurable, default 5s)
+
+**Acceptance Criteria:**
+- [ ] Demo UI accessible at http://localhost:8000/ (root path)
+- [ ] Can create events via form with visual feedback
+- [ ] Inbox displays undelivered events with auto-refresh
+- [ ] Can view event details in modal/detail view
+- [ ] Can acknowledge events (mark as delivered)
+- [ ] API key can be configured and persisted in localStorage
+- [ ] UI is responsive and works on mobile/tablet/desktop
+- [ ] Clear error messages for API failures (401, 429, etc.)
+- [ ] Loading states during API calls
+- [ ] No Tailwind CSS used (vanilla CSS or alternative framework)
+- [ ] All files follow standards (functions < 75 lines, files < 750 lines)
+- [ ] README includes Demo UI section with screenshots or description
+
+**Notes:**
+This PR adds a visual demo layer on top of the existing API. It's perfect for showcasing the system to stakeholders, during presentations, or for quick manual testing. The UI should be simple, clean, and functional - not production-grade but polished enough for demos.
+
+**Estimated Time:** 60-90 minutes
