@@ -388,8 +388,8 @@ docker-compose exec api pytest
 ---
 
 ### PR-011: Unit Tests for Edge Cases and Error Scenarios
-**Status:** In Progress
-**Assigned to:** Orange Agent
+**Status:** Complete
+**Completed by:** Orange Agent
 **Dependencies:** PR-004, PR-005, PR-006, PR-007
 **Priority:** Medium
 
