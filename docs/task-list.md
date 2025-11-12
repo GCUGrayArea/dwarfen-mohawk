@@ -448,33 +448,43 @@ These are development/admin tools, not exposed via API. Print plaintext API key 
 ## Block 7: Performance & Reliability (Depends on: Block 6)
 
 ### PR-013: Structured Logging with Correlation IDs
-**Status:** New
+**Status:** Complete
+**Completed by:** Orange Agent
 **Dependencies:** PR-005, PR-006, PR-007
 **Priority:** Medium
 
 **Description:**
 Implement structured JSON logging throughout the application, add correlation ID (X-Request-ID) to all requests for tracing, log all API requests with relevant metadata, and ensure no sensitive data (API keys, payloads) logged at INFO level.
 
-**Files (ESTIMATED - will be refined during Planning):**
-- src/logging/__init__.py (create) - Package marker
-- src/logging/config.py (create) - Logging configuration (JSON formatter)
-- src/middleware/logging.py (create) - Middleware to log requests and add correlation IDs
-- src/main.py (modify) - Configure logging and register logging middleware
-- tests/middleware/test_logging.py (create) - Tests for logging middleware
+**Files Created/Modified:**
+- src/logging/__init__.py (5 lines) - Package marker with exports
+- src/logging/config.py (105 lines) - Logging configuration with JSONFormatter
+- src/middleware/logging.py (157 lines) - Middleware to log requests and add correlation IDs
+- src/middleware/__init__.py (modified) - Added LoggingMiddleware export
+- src/main.py (modified) - Configure logging and register logging middleware
+- tests/middleware/test_logging.py (260 lines) - 9 comprehensive tests for logging middleware
 
 **Acceptance Criteria:**
-- [ ] All logs output as structured JSON (timestamp, level, message, context)
-- [ ] Every request gets unique correlation ID (X-Request-ID header, auto-generated if not provided)
-- [ ] Correlation ID included in all logs for that request
-- [ ] Request logs include: method, path, status_code, response_time_ms, api_key_id (hashed, not the key itself)
-- [ ] Error logs include correlation ID for easy debugging
-- [ ] No API keys or event payloads logged at INFO level (only at DEBUG)
-- [ ] Logs readable by humans and parseable by machines (CloudWatch Logs Insights)
-- [ ] Tests verify logging behavior
-- [ ] Code follows standards
+- [x] All logs output as structured JSON (timestamp, level, message, context)
+- [x] Every request gets unique correlation ID (X-Request-ID header, auto-generated if not provided)
+- [x] Correlation ID included in all logs for that request
+- [x] Request logs include: method, path, status_code, response_time_ms, api_key_id (hashed, not the key itself)
+- [x] Error logs include correlation ID for easy debugging
+- [x] No API keys or event payloads logged at INFO level (only at DEBUG)
+- [x] Logs readable by humans and parseable by machines (CloudWatch Logs Insights)
+- [x] Tests verify logging behavior (9 tests pass)
+- [x] Code follows standards (all functions < 75 lines, all files < 750 lines)
 
-**Notes:**
-Use Python's logging module with custom JSON formatter. Middleware adds correlation ID to context. This is critical for production debugging and monitoring.
+**Implementation Notes:**
+- Created JSONFormatter that outputs structured logs with timestamp, level, logger, message, and context
+- Middleware extracts or generates correlation ID and stores in request.state
+- Logs request start with method, path, query params, and client host
+- Logs response completion with status code, response time (ms), and API key ID
+- Logs errors with exception info and correlation ID for debugging
+- All helper functions refactored to stay under 75 lines
+- File location (file, line, function) included in DEBUG logs only
+- 9 comprehensive tests covering: correlation ID generation/usage, response headers, request/response logging, error logging, JSON formatting
+- All tests pass, ruff and black checks pass
 
 ---
 
