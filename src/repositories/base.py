@@ -91,6 +91,7 @@ class BaseRepository:
         key: Dict[str, Any],
         update_expression: str,
         expression_values: Dict[str, Any],
+        expression_names: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """
         Update item in DynamoDB table.
@@ -99,6 +100,7 @@ class BaseRepository:
             key: Dictionary with partition key and optionally sort key
             update_expression: DynamoDB update expression
             expression_values: Values for the update expression
+            expression_names: Optional attribute name mappings for reserved keywords
 
         Returns:
             Updated item attributes
@@ -111,10 +113,14 @@ class BaseRepository:
             aws_secret_access_key=settings.aws_secret_access_key,
         ) as dynamodb:
             table = await dynamodb.Table(self.table_name)
-            response = await table.update_item(
-                Key=key,
-                UpdateExpression=update_expression,
-                ExpressionAttributeValues=expression_values,
-                ReturnValues="ALL_NEW",
-            )
+            update_params = {
+                "Key": key,
+                "UpdateExpression": update_expression,
+                "ExpressionAttributeValues": expression_values,
+                "ReturnValues": "ALL_NEW",
+            }
+            if expression_names:
+                update_params["ExpressionAttributeNames"] = expression_names
+
+            response = await table.update_item(**update_params)
             return response.get("Attributes", {})

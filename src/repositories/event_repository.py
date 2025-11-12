@@ -141,17 +141,20 @@ class EventRepository(BaseRepository):
         update_expr = (
             "SET delivered = :delivered, "
             "updated_at = :updated_at, "
-            "ttl = :ttl"
+            "#ttl = :ttl"
         )
         expr_values = {
             ":delivered": 1,  # 1 for True
             ":updated_at": datetime.utcnow().isoformat() + "Z",
             ":ttl": ttl_timestamp,
         }
+        expr_names = {
+            "#ttl": "ttl"  # ttl is a reserved keyword in DynamoDB
+        }
 
         try:
             result = await self.update_item(
-                key, update_expr, expr_values
+                key, update_expr, expr_values, expr_names
             )
             return self._deserialize_event(result)
         except Exception:
