@@ -16,6 +16,7 @@ const elements = {
     apiKeyInput: document.getElementById('api-key'),
     saveKeyBtn: document.getElementById('save-key-btn'),
     clearKeyBtn: document.getElementById('clear-key-btn'),
+    generateKeyBtn: document.getElementById('generate-key-btn'),
     keyStatus: document.getElementById('key-status'),
 
     createEventForm: document.getElementById('create-event-form'),
@@ -85,6 +86,58 @@ function clearApiKey() {
     showStatus('API key cleared', 'success');
     stopAutoRefresh();
     elements.inboxList.innerHTML = '';
+}
+
+async function generateApiKey() {
+    try {
+        elements.generateKeyBtn.disabled = true;
+        elements.generateKeyBtn.textContent = '🔄 Generating...';
+        showStatus('Generating new API key...', 'info');
+
+        const response = await fetch(`${API_BASE_URL}/admin/generate-key`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_email: 'demo@example.com',
+                role: 'creator'
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to generate API key');
+        }
+
+        const data = await response.json();
+
+        // Show the generated key in a modal/alert
+        const message = `✅ API Key Generated!\n\n` +
+            `Key ID: ${data.key_id}\n` +
+            `API Key: ${data.api_key}\n\n` +
+            `⚠️ Save this key now! You won't see it again.\n\n` +
+            `This key has been automatically configured and is ready to use.`;
+
+        alert(message);
+
+        // Auto-save the generated key
+        apiKey = data.api_key;
+        localStorage.setItem(API_KEY_STORAGE_KEY, data.api_key);
+        elements.apiKeyInput.value = '••••••••';
+        showStatus('✅ API key generated and saved!', 'success');
+
+        // Load inbox with new key
+        loadInbox();
+        startAutoRefresh();
+
+    } catch (error) {
+        showStatus(`Error: ${error.message}`, 'error');
+        console.error('Failed to generate API key:', error);
+    } finally {
+        elements.generateKeyBtn.disabled = false;
+        elements.generateKeyBtn.textContent = '🔑 Generate Demo API Key';
+    }
 }
 
 function showStatus(message, type) {
@@ -343,6 +396,7 @@ function setupEventListeners() {
     // API Key
     elements.saveKeyBtn.addEventListener('click', saveApiKey);
     elements.clearKeyBtn.addEventListener('click', clearApiKey);
+    elements.generateKeyBtn.addEventListener('click', generateApiKey);
 
     // Create Event
     elements.createEventForm.addEventListener('submit', async (e) => {

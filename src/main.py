@@ -14,7 +14,7 @@ from src.handlers.exception_handler import (
 from src.logging.config import configure_logging
 from src.middleware.logging import LoggingMiddleware
 from src.middleware.request_validation import RequestSizeValidationMiddleware
-from src.routes import events, status
+from src.routes import admin, events, status
 
 # Configure logging before creating the app
 configure_logging()
@@ -95,6 +95,7 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # Register routers
 app.include_router(events.router)
 app.include_router(status.router)
+app.include_router(admin.router)  # Demo-only admin endpoints
 
 # Mount static files for demo UI
 app.mount("/static", StaticFiles(directory="static"), name="static")

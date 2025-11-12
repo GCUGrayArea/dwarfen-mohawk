@@ -21,17 +21,25 @@
                 <input
                     type="password"
                     id="api-key"
-                    placeholder="Enter your API key"
+                    placeholder="Enter your API key or generate one below"
                     autocomplete="off"
                 >
                 <button id="save-key-btn" class="btn btn-primary">Save Key</button>
                 <button id="clear-key-btn" class="btn btn-secondary">Clear</button>
             </div>
             <div id="key-status" class="status-message"></div>
-            <p class="help-text">
-                Need an API key? Use the CLI:
-                <code>python scripts/manage_api_keys.py create &lt;user_email&gt; &lt;role&gt;</code>
-            </p>
+
+            <div class="key-generation-section">
+                <p class="help-text">
+                    <strong>Don't have an API key?</strong>
+                </p>
+                <button id="generate-key-btn" class="btn btn-success">
+                    🔑 Generate Demo API Key
+                </button>
+                <p class="help-text warning-text">
+                    ⚠️ Demo only: Generated keys work immediately but are not secure for production use.
+                </p>
+            </div>
         </section>
 
         <!-- Event Creation Form -->

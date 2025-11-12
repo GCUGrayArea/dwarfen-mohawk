@@ -119,6 +119,16 @@ textarea {
     background: #4a5568;
 }
 
+.btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+}
+
 .btn-danger {
     background: #e53e3e;
     color: white;
@@ -144,10 +154,26 @@ textarea {
     flex: 1;
 }
 
+.key-generation-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #e5e7eb;
+}
+
+.key-generation-section .btn-success {
+    width: 100%;
+    margin-top: 10px;
+}
+
 .help-text {
     margin-top: 10px;
     font-size: 0.9em;
     color: #718096;
+}
+
+.help-text.warning-text {
+    color: #d97706;
+    font-weight: 500;
 }
 
 .help-text code {
