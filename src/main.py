@@ -10,7 +10,12 @@ from src.handlers.exception_handler import (
     trigger_api_exception_handler,
     validation_exception_handler,
 )
+from src.logging.config import configure_logging
+from src.middleware.logging import LoggingMiddleware
 from src.routes import events, status
+
+# Configure logging before creating the app
+configure_logging()
 
 # Create FastAPI application with enhanced metadata
 app = FastAPI(
@@ -74,6 +79,9 @@ for access.
         "url": "https://zapier.com/terms",
     },
 )
+
+# Register middleware (order matters: first added = outermost layer)
+app.add_middleware(LoggingMiddleware)
 
 # Register exception handlers
 app.add_exception_handler(TriggerAPIException, trigger_api_exception_handler)
