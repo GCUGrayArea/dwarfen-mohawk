@@ -1,5 +1,5 @@
 """API routes for event operations."""
-
+# ruff: noqa: B008
 
 from fastapi import APIRouter, Depends, Query, Request, status
 

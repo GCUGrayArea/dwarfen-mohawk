@@ -1,7 +1,5 @@
 """API Key repository for DynamoDB operations."""
 
-
-
 from src.config import settings
 from src.models.api_key import ApiKey
 from src.repositories.base import BaseRepository

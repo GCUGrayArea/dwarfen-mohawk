@@ -231,9 +231,7 @@ def test_concurrent_duplicates_within_window():
 
     # Try multiple duplicates in quick succession
     for i in range(2, 10):
-        result = cache.check_and_add(
-            "order.placed", {"order_id": "123"}, f"event-{i}"
-        )
+        result = cache.check_and_add("order.placed", {"order_id": "123"}, f"event-{i}")
         assert result == "event-1"
 
     # Cache should only have one entry
@@ -249,7 +247,7 @@ def test_zero_window_no_deduplication():
     assert result1 is None
 
     # Immediate "duplicate" should not be detected (already expired)
-    result2 = cache.check_and_add("test.event", {"data": "test"}, "event-2")
+    cache.check_and_add("test.event", {"data": "test"}, "event-2")
     # Note: This might still detect as duplicate if executed in same instant
     # In practice, entries expire immediately, so this tests cleanup behavior
 

@@ -1,10 +1,11 @@
 """FastAPI application entry point."""
+# type: ignore[arg-type]  # FastAPI exception handler types are generic
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 
 from src.config import settings
-from src.exceptions import TriggerAPIException
+from src.exceptions import TriggerAPIError
 from src.handlers.exception_handler import (
     generic_exception_handler,
     trigger_api_exception_handler,
@@ -87,7 +88,7 @@ app.add_middleware(RequestSizeValidationMiddleware)
 app.add_middleware(LoggingMiddleware)
 
 # Register exception handlers
-app.add_exception_handler(TriggerAPIException, trigger_api_exception_handler)
+app.add_exception_handler(TriggerAPIError, trigger_api_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 

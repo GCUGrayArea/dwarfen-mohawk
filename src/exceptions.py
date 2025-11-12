@@ -3,7 +3,7 @@
 from typing import Any
 
 
-class TriggerAPIException(Exception):
+class TriggerAPIError(Exception):
     """Base exception for Triggers API."""
 
     def __init__(
@@ -29,7 +29,7 @@ class TriggerAPIException(Exception):
         self.details = details or {}
 
 
-class UnauthorizedError(TriggerAPIException):
+class UnauthorizedError(TriggerAPIError):
     """Raised when authentication fails (401)."""
 
     def __init__(
@@ -52,7 +52,7 @@ class UnauthorizedError(TriggerAPIException):
         )
 
 
-class ForbiddenError(TriggerAPIException):
+class ForbiddenError(TriggerAPIError):
     """Raised when access is denied (403)."""
 
     def __init__(
@@ -75,7 +75,7 @@ class ForbiddenError(TriggerAPIException):
         )
 
 
-class RateLimitError(TriggerAPIException):
+class RateLimitError(TriggerAPIError):
     """Raised when rate limit is exceeded (429)."""
 
     def __init__(
@@ -103,7 +103,7 @@ class RateLimitError(TriggerAPIException):
         self.retry_after = retry_after
 
 
-class EventNotFoundError(TriggerAPIException):
+class EventNotFoundError(TriggerAPIError):
     """Raised when an event is not found (404)."""
 
     def __init__(
@@ -131,7 +131,7 @@ class EventNotFoundError(TriggerAPIException):
         )
 
 
-class ServiceUnavailableError(TriggerAPIException):
+class ServiceUnavailableError(TriggerAPIError):
     """Raised when a dependent service is unavailable (503)."""
 
     def __init__(
@@ -162,7 +162,7 @@ class ServiceUnavailableError(TriggerAPIException):
         )
 
 
-class RequestTooLargeError(TriggerAPIException):
+class RequestTooLargeError(TriggerAPIError):
     """Raised when request payload exceeds size limit (413)."""
 
     def __init__(

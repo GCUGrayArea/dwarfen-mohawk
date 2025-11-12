@@ -304,9 +304,7 @@ async def test_list_undelivered_pagination_boundary(
     for i in range(5):
         event_data_copy = event_data.copy()
         event_data_copy["event_id"] = str(uuid4())
-        event_data_copy["timestamp"] = (
-            datetime.utcnow().isoformat() + f"_{i:03d}" + "Z"
-        )
+        event_data_copy["timestamp"] = datetime.utcnow().isoformat() + f"_{i:03d}" + "Z"
         event = Event(**event_data_copy)
         await repository.create(event)
 

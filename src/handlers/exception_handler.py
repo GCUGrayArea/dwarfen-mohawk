@@ -6,14 +6,14 @@ from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from src.exceptions import RateLimitError, TriggerAPIException
+from src.exceptions import RateLimitError, TriggerAPIError
 
 
 def create_error_response(
     error_code: str,
     message: str,
     status_code: int,
-    details: dict[str, Any] = None,
+    details: dict[str, Any] | None = None,
     correlation_id: str | None = None,
 ) -> JSONResponse:
     """
@@ -44,14 +44,14 @@ def create_error_response(
 
 
 async def trigger_api_exception_handler(
-    request: Request, exc: TriggerAPIException
+    request: Request, exc: TriggerAPIError
 ) -> JSONResponse:
     """
-    Handle custom TriggerAPIException.
+    Handle custom TriggerAPIError.
 
     Args:
         request: FastAPI request
-        exc: TriggerAPIException instance
+        exc: TriggerAPIError instance
 
     Returns:
         JSONResponse with error details
@@ -98,7 +98,7 @@ async def validation_exception_handler(
     correlation_id = getattr(request.state, "correlation_id", None)
 
     errors = exc.errors()
-    details = {"validation_errors": []}
+    details: dict[str, Any] = {"validation_errors": []}
     error_messages = []
 
     for error in errors:

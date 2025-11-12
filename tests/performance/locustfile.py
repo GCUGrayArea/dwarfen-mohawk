@@ -10,11 +10,9 @@ Target metrics from PRD:
 - Throughput: 1000+ events/second
 """
 
-import json
 import random
-import string
 import uuid
-from typing import Any, Dict
+from typing import Any
 
 from locust import HttpUser, between, task
 
@@ -44,7 +42,7 @@ class TriggersAPIUser(HttpUser):
         }
         self.created_event_ids: list[str] = []
 
-    def generate_random_payload(self) -> Dict[str, Any]:
+    def generate_random_payload(self) -> dict[str, Any]:
         """Generate a random event payload for testing."""
         return {
             "user_id": f"user_{random.randint(1000, 9999)}",

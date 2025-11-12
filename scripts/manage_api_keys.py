@@ -10,10 +10,7 @@ import asyncio
 import secrets
 import sys
 import uuid
-from datetime import datetime, timezone
-from typing import List, Optional
-
-import aioboto3
+from datetime import UTC, datetime
 
 from src.auth.api_key import hash_api_key
 from src.config import settings
@@ -32,9 +29,9 @@ def generate_api_key() -> str:
 
 
 async def cmd_generate(
-    description: Optional[str],
+    description: str | None,
     rate_limit: int,
-    allowed_event_types: Optional[List[str]],
+    allowed_event_types: list[str] | None,
 ) -> None:
     """
     Generate a new API key and store in DynamoDB.
@@ -48,7 +45,7 @@ async def cmd_generate(
     plain_key = generate_api_key()
     key_id = str(uuid.uuid4())
     key_hash = hash_api_key(plain_key)
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     # Create API key model
     api_key = ApiKey(
@@ -74,7 +71,7 @@ async def cmd_generate(
     print("   It will not be shown again.")
     print(f"\nDescription: {description or 'None'}")
     print(f"Rate Limit: {rate_limit} requests/minute")
-    print(f"Status: active")
+    print("Status: active")
     if allowed_event_types:
         print(f"Allowed Event Types: {', '.join(allowed_event_types)}")
 
@@ -100,8 +97,10 @@ async def cmd_list() -> None:
         return
 
     # Print header
-    print(f"\n{'Key ID':<38} {'Status':<10} {'Rate Limit':<12}"
-          f" {'Created':<20} {'Description':<30}")
+    print(
+        f"\n{'Key ID':<38} {'Status':<10} {'Rate Limit':<12}"
+        f" {'Created':<20} {'Description':<30}"
+    )
     print("-" * 120)
 
     # Print each key
@@ -187,10 +186,7 @@ async def cmd_update_rate_limit(key_id: str, rate_limit: int) -> None:
             ExpressionAttributeValues={":rate_limit": rate_limit},
         )
 
-    print(
-        f"✓ Rate limit for key {key_id} updated to"
-        f" {rate_limit} requests/minute"
-    )
+    print(f"✓ Rate limit for key {key_id} updated to" f" {rate_limit} requests/minute")
 
 
 def main() -> None:
@@ -203,9 +199,7 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", help="Command")
 
     # Generate command
-    generate_parser = subparsers.add_parser(
-        "generate", help="Generate a new API key"
-    )
+    generate_parser = subparsers.add_parser("generate", help="Generate a new API key")
     generate_parser.add_argument(
         "--description",
         type=str,
@@ -228,9 +222,7 @@ def main() -> None:
     subparsers.add_parser("list", help="List all API keys")
 
     # Revoke command
-    revoke_parser = subparsers.add_parser(
-        "revoke", help="Revoke an API key"
-    )
+    revoke_parser = subparsers.add_parser("revoke", help="Revoke an API key")
     revoke_parser.add_argument("key_id", type=str, help="Key ID to revoke")
 
     # Update rate limit command

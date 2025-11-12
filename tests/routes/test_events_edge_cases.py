@@ -65,9 +65,7 @@ async def test_post_event_with_single_char_event_type(
 
 
 @pytest.mark.asyncio
-async def test_post_event_with_max_length_event_type(
-    valid_api_key, mock_api_key_model
-):
+async def test_post_event_with_max_length_event_type(valid_api_key, mock_api_key_model):
     """Test POST /events with 255 character event_type (maximum valid)."""
     with (
         patch("src.auth.dependencies.verify_key_against_all") as mock_verify,
@@ -124,9 +122,7 @@ async def test_post_event_with_empty_event_type(valid_api_key, mock_api_key_mode
 
 
 @pytest.mark.asyncio
-async def test_post_event_with_too_long_event_type(
-    valid_api_key, mock_api_key_model
-):
+async def test_post_event_with_too_long_event_type(valid_api_key, mock_api_key_model):
     """Test POST /events with 256+ char event_type returns validation error."""
     with (
         patch("src.auth.dependencies.verify_key_against_all") as mock_verify,

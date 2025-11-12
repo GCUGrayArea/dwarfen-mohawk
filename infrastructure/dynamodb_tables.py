@@ -1,16 +1,13 @@
 """Script to create DynamoDB tables for LocalStack or AWS."""
 
 import asyncio
-import sys
-from typing import Any, Dict
+from typing import Any
 
 import aioboto3
 from botocore.exceptions import ClientError
 
 
-async def create_events_table(
-    dynamodb: Any, table_name: str
-) -> None:
+async def create_events_table(dynamodb: Any, table_name: str) -> None:
     """
     Create Events table with GSI for delivered status.
 
@@ -65,9 +62,7 @@ async def create_events_table(
             raise
 
 
-async def create_api_keys_table(
-    dynamodb: Any, table_name: str
-) -> None:
+async def create_api_keys_table(dynamodb: Any, table_name: str) -> None:
     """
     Create API Keys table.
 
@@ -104,7 +99,7 @@ async def main() -> None:
     # Load settings
     from src.config import settings
 
-    print(f"Creating DynamoDB tables...")
+    print("Creating DynamoDB tables...")
     print(f"Region: {settings.aws_region}")
     print(f"Endpoint: {settings.dynamodb_endpoint_url or 'AWS'}")
     print()
@@ -118,14 +113,10 @@ async def main() -> None:
         aws_secret_access_key=settings.aws_secret_access_key,
     ) as dynamodb:
         # Create Events table
-        await create_events_table(
-            dynamodb, settings.dynamodb_table_events
-        )
+        await create_events_table(dynamodb, settings.dynamodb_table_events)
 
         # Create API Keys table
-        await create_api_keys_table(
-            dynamodb, settings.dynamodb_table_api_keys
-        )
+        await create_api_keys_table(dynamodb, settings.dynamodb_table_api_keys)
 
     print()
     print("✓ All tables created successfully!")

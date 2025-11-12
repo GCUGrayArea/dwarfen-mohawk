@@ -1,6 +1,5 @@
 """API Key model for DynamoDB."""
 
-
 from pydantic import BaseModel, Field
 
 
@@ -27,9 +26,7 @@ class ApiKey(BaseModel):
         None, description="List of allowed event types (None = all)"
     )
     created_at: str = Field(..., description="ISO 8601 creation timestamp")
-    last_used_at: str | None = Field(
-        None, description="ISO 8601 last used timestamp"
-    )
+    last_used_at: str | None = Field(None, description="ISO 8601 last used timestamp")
     description: str | None = Field(None, description="Human-readable description")
 
     class Config:

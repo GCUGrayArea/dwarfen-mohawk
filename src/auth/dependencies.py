@@ -1,6 +1,5 @@
 """FastAPI dependencies for API key authentication."""
 
-
 from fastapi import Header
 from fastapi.security import HTTPBearer
 
@@ -44,9 +43,7 @@ async def get_api_key_from_header(
     return parts[1]
 
 
-async def verify_key_against_all(
-    repo: ApiKeyRepository, api_key: str
-) -> ApiKey | None:
+async def verify_key_against_all(repo: ApiKeyRepository, api_key: str) -> ApiKey | None:
     """
     Scan all API keys and verify the provided key against each hash.
 

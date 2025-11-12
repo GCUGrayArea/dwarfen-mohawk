@@ -523,7 +523,7 @@ async def test_list_inbox_cursor_with_special_characters(
 
     mock_repository.list_undelivered.return_value = ([], None)
 
-    response = await event_service.list_inbox(cursor=cursor)
+    await event_service.list_inbox(cursor=cursor)
 
     # Should decode cursor correctly
     mock_repository.list_undelivered.assert_called_with(

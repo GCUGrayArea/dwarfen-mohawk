@@ -1,6 +1,5 @@
 """Unit tests for API key validation and hashing."""
 
-
 from src.auth.api_key import hash_api_key, verify_api_key
 
 
