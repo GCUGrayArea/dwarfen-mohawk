@@ -98,11 +98,34 @@ pre-commit install
 ### Running Tests
 
 ```bash
-# Inside Docker container
-docker-compose exec api pytest
-
-# Or locally (if dependencies installed)
+# Run all tests (unit + integration)
 pytest
+
+# Run only unit tests (fast, no external dependencies)
+pytest -m "not integration"
+
+# Run only integration tests (requires LocalStack running)
+pytest -m integration
+
+# Run with coverage report
+pytest --cov
+
+# Run specific test file
+pytest tests/integration/test_event_lifecycle.py -v
+```
+
+**Note on Integration Tests:**
+
+Integration tests require LocalStack to be running on `localhost:4566`. Start it with:
+
+```bash
+docker-compose up -d localstack
+```
+
+Or run all tests inside the Docker container (LocalStack will be available):
+
+```bash
+docker-compose exec api pytest
 ```
 
 ### Code Quality Checks
@@ -150,13 +173,133 @@ pre-commit run --all-files
 - **GET /status**: Health check endpoint (no authentication required)
 - **GET /**: Root endpoint with API information
 
-### Events (Implementation in progress)
+### Events
 - **POST /events**: Ingest new event (requires API key)
-- **GET /inbox**: List undelivered events with pagination (requires API key)
+- **GET /events/inbox**: List undelivered events with pagination (requires API key)
 - **GET /events/{event_id}**: Get specific event (requires API key)
 - **DELETE /events/{event_id}**: Mark event as delivered (requires API key)
 
-See API documentation at `/docs` for detailed information on request/response formats.
+### Interactive Documentation
+
+- **Swagger UI**: http://localhost:8000/docs - Try out API endpoints interactively
+- **ReDoc**: http://localhost:8000/redoc - Clean, searchable API reference
+
+## API Usage Examples
+
+### Authentication
+
+All endpoints (except health checks) require authentication via API key:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  http://localhost:8000/events/inbox
+```
+
+### Send an Event
+
+```bash
+curl -X POST http://localhost:8000/events \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_type": "user.signup",
+    "payload": {
+      "user_id": "123",
+      "email": "user@example.com",
+      "plan": "pro"
+    },
+    "source": "web-app"
+  }'
+```
+
+Response:
+```json
+{
+  "status": "accepted",
+  "event_id": "550e8400-e29b-41d4-a716-446655440000",
+  "timestamp": "2025-11-11T12:00:00Z",
+  "message": "Event successfully ingested"
+}
+```
+
+### Poll Inbox (Get Undelivered Events)
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "http://localhost:8000/events/inbox?limit=10"
+```
+
+Response:
+```json
+{
+  "events": [
+    {
+      "event_id": "550e8400-e29b-41d4-a716-446655440000",
+      "event_type": "user.signup",
+      "payload": {"user_id": "123", "email": "user@example.com"},
+      "timestamp": "2025-11-11T12:00:00Z",
+      "source": "web-app"
+    }
+  ],
+  "pagination": {
+    "next_cursor": "eyJsYXN0X2V2ZW50X2lkIjoi...",
+    "has_more": false,
+    "total_undelivered": 1
+  }
+}
+```
+
+### Get Specific Event
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "http://localhost:8000/events/550e8400-e29b-41d4-a716-446655440000?timestamp=2025-11-11T12:00:00Z"
+```
+
+### Acknowledge Event (Mark as Delivered)
+
+```bash
+curl -X DELETE \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  "http://localhost:8000/events/550e8400-e29b-41d4-a716-446655440000?timestamp=2025-11-11T12:00:00Z"
+```
+
+Returns `204 No Content` on success.
+
+### Python Client Example
+
+See [examples/README.md](examples/README.md) for a complete Python client with:
+
+- Async/await support using httpx
+- Automatic retry logic with exponential backoff
+- Rate limit handling
+- Pagination support
+- Error handling best practices
+
+Quick example:
+
+```python
+from examples.sample_client import TriggersAPIClient
+
+async with TriggersAPIClient(api_key="your_key") as client:
+    # Send an event
+    response = await client.send_event(
+        event_type="user.signup",
+        payload={"user_id": "123", "email": "user@example.com"}
+    )
+    print(f"Event ID: {response['event_id']}")
+
+    # Poll inbox
+    inbox = await client.poll_inbox(limit=50)
+    for event in inbox["events"]:
+        print(f"Processing {event['event_id']}")
+        # ... process event ...
+        await client.acknowledge_event(event["event_id"], event["timestamp"])
+```
+
+For complete examples including error handling, pagination, and worker patterns, see:
+- [examples/sample_client.py](examples/sample_client.py) - Full client implementation
+- [examples/README.md](examples/README.md) - Usage guide and patterns
 
 ## Environment Variables
 
