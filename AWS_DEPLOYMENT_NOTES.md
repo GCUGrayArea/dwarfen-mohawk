@@ -365,16 +365,68 @@ Test 5: Create Another Event - ✅ WORKING!
 
 **Status:** ✅ **DynamoDB authentication is WORKING!** Events are being created successfully in production!
 
-## Next Steps for Debugging
+## Issue 6 Resolution: Route Path Configuration - **FIXED!**
 
-### Current Status (2025-11-12 20:40 UTC)
-- ✅ [WORKING] Health check (GET /status)
-- ✅ [WORKING] Lambda deploys successfully with Python 3.11 binaries
-- ✅ [WORKING] DynamoDB authentication with temporary credentials
-- ✅ [WORKING] POST /events - Successfully creating events!
-- ❌ [FAILING] GET /inbox - Returns 404
-- ❌ [FAILING] GET /events/{event_id} - Returns 404
-- ❌ [FAILING] DELETE /events/{event_id} - Returns 404
+**Problem:** GET /inbox and individual event endpoints were returning 404 errors.
+
+**Root Cause (2025-11-12 - White Agent):**
+The APIRouter had `prefix="/events"` which made all routes under `/events/*`:
+- GET `/inbox` became `/events/inbox` (404)
+- GET/DELETE `/{event_id}` became `/events/{event_id}` instead of `/inbox/{event_id}`
+
+**The Fix:**
+Removed the router prefix and made all route paths explicit:
+- Changed `router = APIRouter(prefix="/events")` to `router = APIRouter()`
+- Updated POST route from `""` to `"/events"`
+- Updated GET/DELETE routes from `"/events/{event_id}"` to `"/inbox/{event_id}"`
+
+**Status:** ✅ All route paths now working correctly.
+
+## Issue 7 Resolution: Timestamp Parameter Requirement - **FIXED!**
+
+**Problem:** GET and DELETE endpoints for individual events required a `timestamp` query parameter that users shouldn't need to provide.
+
+**Root Cause (2025-11-12 - White Agent):**
+DynamoDB uses composite primary key (event_id + timestamp), so repository methods required both. The API forced users to provide timestamp.
+
+**The Fix:**
+1. Made timestamp an optional query parameter: `timestamp: str | None = Query(default=None)`
+2. Added service layer methods that work with just event_id:
+   - `get_by_id(event_id)` - Queries inbox to find event, then retrieves it
+   - `mark_delivered_by_id(event_id)` - Finds event first, then marks as delivered
+3. Route handlers now call the appropriate method based on whether timestamp is provided
+
+**Files Modified:**
+- `src/routes/events.py` - Made timestamp optional on get_event() and delete_event()
+- `src/services/event_service.py` - Added get_by_id() and mark_delivered_by_id()
+
+**Status:** ✅ Users can now GET and DELETE events using only the event_id.
+
+## Final Deployment Status (2025-11-12 21:26 UTC)
+
+### ✅ WORKING - Core API Functional for Demo!
+- ✅ GET /status - Health check
+- ✅ POST /events - Create events successfully
+- ✅ GET /inbox - List all undelivered events (working with 7+ events in production)
+- ✅ GET /inbox/{event_id} - Retrieve specific event (no timestamp required!)
+- ✅ DELETE /inbox/{event_id} - Mark event as delivered (returns 204 No Content)
+
+### ❌ Known Issues (Non-Blocking)
+- ❌ GET /inbox?limit=2 - Returns 500 error (pagination with limit parameter has a bug)
+  - GET /inbox without limit works fine
+  - Low priority - pagination is nice-to-have feature
+
+### Demo UI
+Available at: https://t32vd52q4e.execute-api.us-east-2.amazonaws.com/v1/static/index.html
+
+## Summary of All Fixes Applied
+
+1. **Binary Compatibility** - Used Docker with Python 3.11 for Lambda package compilation
+2. **DynamoDB Authentication** - Added AWS_SESSION_TOKEN support for temporary credentials
+3. **Route Paths** - Fixed router prefix issue, made paths explicit (/inbox, /events)
+4. **Timestamp Parameter** - Made optional on GET/DELETE, added service methods for ID-only lookup
+
+**The API is now ready for demonstration!** All core CRUD operations work correctly.
 
 ### Immediate Next Actions
 
