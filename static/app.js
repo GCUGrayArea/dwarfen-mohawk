@@ -344,6 +344,11 @@ function closeModal() {
 async function acknowledgeEvent() {
     if (!currentEventId || !apiKey) return;
 
+    // Show loading state
+    const originalText = elements.acknowledgeBtn.textContent;
+    elements.acknowledgeBtn.textContent = 'Acknowledging...';
+    elements.acknowledgeBtn.disabled = true;
+
     try {
         const response = await fetch(
             `${API_BASE_URL}/inbox/${currentEventId}`,
@@ -365,6 +370,9 @@ async function acknowledgeEvent() {
 
     } catch (error) {
         alert(`Error: ${error.message}`);
+        // Restore button state on error
+        elements.acknowledgeBtn.textContent = originalText;
+        elements.acknowledgeBtn.disabled = false;
     }
 }
 
