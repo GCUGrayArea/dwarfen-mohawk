@@ -1,5 +1,8 @@
 // API Configuration
-const API_BASE_URL = window.location.origin;
+// Detect base URL: if we're in /v1/static/, use /v1 as base, otherwise use origin
+const API_BASE_URL = window.location.pathname.startsWith('/v1/')
+    ? window.location.origin + '/v1'
+    : window.location.origin;
 const API_KEY_STORAGE_KEY = 'zapier_api_key';
 const AUTO_REFRESH_INTERVAL = 5000; // 5 seconds
 
@@ -203,7 +206,7 @@ async function loadInbox(cursor = null) {
     elements.inboxError.textContent = '';
 
     try {
-        let url = `${API_BASE_URL}/events/inbox?limit=10`;
+        let url = `${API_BASE_URL}/inbox?limit=10`;
         if (cursor) {
             url += `&cursor=${encodeURIComponent(cursor)}`;
         }

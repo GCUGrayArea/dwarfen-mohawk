@@ -71,6 +71,9 @@ pip install -r ../../requirements-lambda.txt -t .
 # Copy application source code
 cp -r ../../src .
 
+# Copy static files for demo UI
+cp -r ../../static .
+
 # Create deployment zip
 zip -r ../lambda-deployment.zip .
 
