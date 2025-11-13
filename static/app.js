@@ -346,7 +346,7 @@ async function acknowledgeEvent() {
 
     try {
         const response = await fetch(
-            `${API_BASE_URL}/events/${currentEventId}`,
+            `${API_BASE_URL}/inbox/${currentEventId}`,
             {
                 method: 'DELETE',
                 headers: {
